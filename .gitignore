@@ -1,0 +1,50 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Virtual Machines
+.vagrant/
+*.vdi
+*.vbox
+*.vbox-prev
+*.vmdk
+
+# Logs and environment files
+*.log
+logs/
+.env
+.venv
+env.bat
+venv.bat
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Offline deployment
+/offline_deployment/
+CyberRange_VM_Package.zip
