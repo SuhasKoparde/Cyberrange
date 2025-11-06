@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Security Tools - Cyber Range{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Security Tools</h2>
+    <p class="lead">Access various security tools to assist with your challenges.</p>
+    
+    <div class="row mt-4">
+        <!-- Nmap Tool -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Nmap Scanner</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Powerful network scanning tool for network discovery and security auditing.</p>
+                    <h6>Common Commands:</h6>
+                    <ul class="list-unstyled">
+                        <li><code>nmap -sS -sV -T4 target</code> - Basic scan</li>
+                        <li><code>nmap -p- -T4 target</code> - Scan all ports</li>
+                        <li><code>nmap -A -T4 target</code> - Aggressive scan</li>
+                        <li><code>nmap --script=vuln target</code> - Vulnerability scan</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nmapModal">
+                        Launch Nmap
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Burp Suite -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Burp Suite</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Web application security testing platform with various tools.</p>
+                    <h6>Key Features:</h6>
+                    <ul>
+                        <li>Proxy for intercepting requests</li>
+                        <li>Web vulnerability scanner</li>
+                        <li>Intruder for custom attacks</li>
+                        <li>Repeater for manual testing</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="http://localhost:8080" target="_blank" class="btn btn-success">
+                        Launch Burp Suite
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Web Terminal -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title mb-0">Web Terminal</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Access a terminal directly in your browser.</p>
+                    <h6>Common Commands:</h6>
+                    <ul class="list-unstyled">
+                        <li><code>ls</code> - List files</li>
+                        <li><code>cd</code> - Change directory</li>
+                        <li><code>cat</code> - View file contents</li>
+                        <li><code>grep</code> - Search in files</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#terminalModal">
+                        Open Terminal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Nmap Modal -->
+<div class="modal fade" id="nmapModal" tabindex="-1" aria-labelledby="nmapModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nmapModalLabel">Nmap Scanner</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="nmapTarget" class="form-label">Target (IP or Hostname)</label>
+                    <input type="text" class="form-control" id="nmapTarget" placeholder="e.g., 192.168.1.1 or example.com">
+                </div>
+                <div class="mb-3">
+                    <label for="nmapOptions" class="form-label">Scan Options</label>
+                    <select class="form-select" id="nmapOptions">
+                        <option value="-sS -sV -T4">Quick Scan (Stealth + Version Detection)</option>
+                        <option value="-p-">Full Port Scan</option>
+                        <option value="-A -T4">Aggressive Scan</option>
+                        <option value="--script=vuln">Vulnerability Scan</option>
+                        <option value="-sU -sS -p U:53,111,137,T:21-25,80,139,443,8080">Common Ports Scan</option>
+                        <option value="custom">Custom Command</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="customNmapCommand" style="display: none;">
+                    <label for="nmapCustom" class="form-label">Custom Nmap Command</label>
+                    <input type="text" class="form-control" id="nmapCustom" placeholder="e.g., -sS -sV -O -T4 -p1-1000">
+                </div>
+                <button class="btn btn-primary" onclick="runNmap()">Run Scan</button>
+                <div id="nmapResult" class="mt-3 p-3 bg-light border rounded" style="min-height: 200px; max-height: 400px; overflow-y: auto;">
+                    <p class="text-muted">Scan results will appear here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terminal Modal -->
+<div class="modal fade" id="terminalModal" tabindex="-1" aria-labelledby="terminalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="terminalModalLabel">Web Terminal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-dark text-white p-0">
+                <div id="terminal" style="height: 500px;">
+                    <div class="p-3">
+                        <p>Connecting to terminal...</p>
+                        <div class="spinner-border text-light" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toggle custom Nmap command field
+$('#nmapOptions').change(function() {
+    if ($(this).val() === 'custom') {
+        $('#customNmapCommand').show();
+    } else {
+        $('#customNmapCommand').hide();
+    }
+});
+
+// Run Nmap scan
+function runNmap() {
+    const target = $('#nmapTarget').val();
+    let command = $('#nmapOptions').val();
+    
+    if (command === 'custom') {
+        command = $('#nmapCustom').val();
+    }
+    
+    if (!target) {
+        alert('Please enter a target');
+        return;
+    }
+    
+    $('#nmapResult').html('<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div><p>Running scan, please wait...</p></div>');
+    
+    // In a real implementation, this would call a server endpoint that runs nmap
+    // For demo purposes, we'll simulate a response
+    setTimeout(() => {
+        $('#nmapResult').html(`
+            <pre class="mb-0">Starting Nmap 7.92 ( https://nmap.org ) at ${new Date().toLocaleString()}
+Nmap scan report for ${target}
+Host is up (0.12s latency).
+Not shown: 998 filtered tcp ports (no-response)
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.41
+|_http-title: Example Web Server
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 8.42 seconds</pre>
+        `);
+    }, 2000);
+}
+
+// Initialize terminal
+$(document).ready(function() {
+    // In a real implementation, this would initialize a terminal emulator
+    // For example: new Terminal('#terminal');
+    
+    // For demo, we'll show a message
+    setTimeout(() => {
+        $('#terminal').html(`
+            <div class="p-3">
+                <div class="mb-3">
+                    <span class="text-success">user@cyberrange:~$</span> <span class="text-white">ls -la</span>
+                </div>
+                <div class="mb-3">
+                    <pre class="text-white-50 mb-0">total 32
+drwxr-xr-x 1 user user 4096 Nov  6 07:30 .
+drwxr-xr-x 1 root root 4096 Nov  1 10:00 ..
+-rw-r--r-- 1 user user  220 Nov  1 10:00 .bash_logout
+-rw-r--r-- 1 user user 3771 Nov  1 10:00 .bashrc
+drwx------ 2 user user 4096 Nov  6 07:30 .cache
+-rw-r--r-- 1 user user  807 Nov  1 10:00 .profile
+drwxr-xr-x 2 user user 4096 Nov  6 07:30 challenges
+drwxr-xr-x 2 user user 4096 Nov  6 07:30 tools</pre>
+                </div>
+                <div class="mb-3">
+                    <span class="text-success">user@cyberrange:~$</span> <span class="text-white">_</span>
+                </div>
+            </div>
+        `);
+    }, 1000);
+});
+</script>
+{% endblock %}

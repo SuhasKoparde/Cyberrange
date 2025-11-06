@@ -78,6 +78,55 @@ python3 offline_app.py
 - Go to: http://localhost:5000
 - Login: **admin** / **admin123**
 
+## 🔧 Troubleshooting Common Issues
+
+### 1. Network Connectivity Problems
+- **No Internet in Kali VM**
+  - Check VM network settings (NAT or Bridged)
+  - Restart networking service:
+    ```bash
+    sudo systemctl restart NetworkManager
+    ```
+
+### 2. Permission Denied Errors
+- If scripts won't run:
+  ```bash
+  # Add execute permissions
+  chmod +x script_name.sh
+  
+  # Run with sudo if needed
+  sudo ./script_name.sh
+  ```
+
+### 3. Missing Dependencies
+- If you see package-related errors:
+  ```bash
+  # Update package lists
+  sudo apt update
+  
+  # Install missing dependencies
+  sudo apt install -f
+  ```
+
+### 4. Web Interface Not Loading
+- If http://localhost:5000 is not accessible:
+  - Check if the Flask server is running
+  - Verify no other service is using port 5000
+  - Check firewall settings:
+    ```bash
+    sudo ufw status
+    sudo ufw allow 5000/tcp
+    ```
+
+### 5. VM Performance Issues
+- If Kali is running slowly:
+  - Allocate more RAM/CPU in VM settings
+  - Disable visual effects:
+    ```bash
+    sudo systemctl set-default multi-user.target
+    sudo reboot
+    ```
+
 ## 🛠️ Integration with Kali Tools
 
 Your cyber range challenges can now use Kali's built-in tools:

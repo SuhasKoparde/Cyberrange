@@ -3,73 +3,232 @@
 {% block title %}Challenges - Cyber Range{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
-        <h2 class="mb-4">
-            <i class="fas fa-flag"></i> Challenges
-        </h2>
-    </div>
-</div>
-
-<div class="row g-4">
-    {% for challenge in challenges %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <h5 class="card-title">{{ challenge.name }}</h5>
-                    {% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}
-                        <i class="fas fa-check-circle text-success fa-lg" title="Completed"></i>
-                    {% endif %}
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <i class="fas fa-flag"></i> Cybersecurity Challenges
+            </h2>
+            <div>
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#challengeFilters">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+        <p class="text-muted">Test your skills with these hands-on cybersecurity challenges</p>
+        
+        <div class="collapse mb-4" id="challengeFilters">
+            <div class="card card-body bg-dark">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Category</label>
+                        <select class="form-select form-select-sm" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="web">Web Application</option>
+                            <option value="network">Network Security</option>
+                            <option value="crypto">Cryptography</option>
+                            <option value="forensics">Digital Forensics</option>
+                            <option value="reversing">Reverse Engineering</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Difficulty</label>
+                        <select class="form-select form-select-sm" id="difficultyFilter">
+                            <option value="">All Levels</option>
+                            <option value="Easy">Beginner</option>
+                            <option value="Medium">Intermediate</option>
+                            <option value="Hard">Advanced</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select form-select-sm" id="statusFilter">
+                            <option value="all">All Challenges</option>
+                            <option value="completed">Completed</option>
+                            <option value="incomplete">Incomplete</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <p class="card-text">{{ challenge.description }}</p>
-                
-                <div class="mb-3">
-                    <span class="badge bg-secondary me-2">{{ challenge.category }}</span>
-                    <span class="badge bg-{% if challenge.difficulty == 'Easy' %}success{% elif challenge.difficulty == 'Medium' %}warning{% else %}danger{% endif %}">
-                        {{ challenge.difficulty }}
-                    </span>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted">
-                        <i class="fas fa-star"></i> {{ challenge.points }} points
-                    </span>
-                    {% if challenge.id in progress_dict %}
-                        <span class="text-muted small">
-                            Attempts: {{ progress_dict[challenge.id].attempts }}
-                        </span>
-                    {% endif %}
-                </div>
-                
-                {% if challenge.target_ip %}
-                <div class="mb-3">
-                    <small class="text-muted">
-                        <i class="fas fa-bullseye"></i> Target: {{ challenge.target_ip }}
-                    </small>
-                </div>
-                {% endif %}
-                
-                <a href="{{ url_for('challenge_detail', challenge_id=challenge.id) }}" 
-                   class="btn btn-primary w-100">
-                    {% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}
-                        <i class="fas fa-eye"></i> Review Challenge
-                    {% else %}
-                        <i class="fas fa-play"></i> Start Challenge
-                    {% endif %}
-                </a>
             </div>
         </div>
     </div>
-    {% endfor %}
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <ul class="nav nav-tabs" id="challengeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                    <i class="fas fa-th-large"></i> All Challenges
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="web-tab" data-bs-toggle="tab" data-bs-target="#web" type="button" role="tab">
+                    <i class="fas fa-globe"></i> Web Security
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="network-tab" data-bs-toggle="tab" data-bs-target="#network" type="button" role="tab">
+                    <i class="fas fa-network-wired"></i> Network Security
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="crypto-tab" data-bs-toggle="tab" data-bs-target="#crypto" type="button" role="tab">
+                    <i class="fas fa-lock"></i> Cryptography
+                </button>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="tab-content" id="challengeTabsContent">
+    <div class="tab-pane fade show active" id="all" role="tabpanel">
+        <div class="row g-4">
+            {% for challenge in challenges %}
+            <div class="col-md-6 col-lg-4 challenge-card" 
+                 data-category="{{ challenge.category|lower }}" 
+                 data-difficulty="{{ challenge.difficulty }}"
+                 data-status="{% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}completed{% else %}incomplete{% endif %}">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="badge bg-{{ 'success' if challenge.difficulty == 'Easy' else 'warning' if challenge.difficulty == 'Medium' else 'danger' }}">
+                            {{ challenge.difficulty }}
+                        </span>
+                        {% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}
+                            <span class="badge bg-success"><i class="fas fa-check"></i> Completed</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">{{ challenge.name }}</h5>
+                            <span class="badge bg-secondary">{{ challenge.category }}</span>
+                        </div>
+                        
+                        <p class="card-text text-muted">{{ challenge.description[:150] }}{% if challenge.description|length > 150 %}...{% endif %}</p>
+                        
+                        {% if challenge.target_ip %}
+                        <div class="mb-3">
+                            <span class="badge bg-info">
+                                <i class="fas fa-server"></i> {{ challenge.target_ip }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary">
+                                <i class="fas fa-star"></i> {{ challenge.points }} XP
+                            </span>
+                            {% if challenge.id in progress_dict %}
+                                <small class="text-muted">
+                                    <i class="fas fa-sync-alt"></i> {{ progress_dict[challenge.id].attempts }} attempts
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a href="{{ url_for('challenge_detail', challenge_id=challenge.id) }}" 
+                           class="btn btn-outline-primary w-100">
+                            {% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}
+                                <i class="fas fa-redo"></i> Try Again
+                            {% else %}
+                                <i class="fas fa-arrow-right"></i> Start Challenge
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Other tabs will be populated by JavaScript -->
+    <div class="tab-pane fade" id="web" role="tabpanel">
+        <div class="row g-4 web-challenges">
+            <!-- Web challenges will be populated by JavaScript -->
+        </div>
+    </div>
+    <div class="tab-pane fade" id="network" role="tabpanel">
+        <div class="row g-4 network-challenges">
+            <!-- Network challenges will be populated by JavaScript -->
+        </div>
+    </div>
+    <div class="tab-pane fade" id="crypto" role="tabpanel">
+        <div class="row g-4 crypto-challenges">
+            <!-- Crypto challenges will be populated by JavaScript -->
+        </div>
+    </div>
 </div>
 
 {% if not challenges %}
-<div class="text-center mt-5">
-    <i class="fas fa-flag fa-4x text-muted mb-3"></i>
-    <h4>No Challenges Available</h4>
-    <p class="text-muted">Check back later for new challenges!</p>
+<div class="text-center py-5 my-5">
+    <i class="fas fa-flag fa-5x text-muted mb-4"></i>
+    <h3>No Challenges Available</h3>
+    <p class="lead text-muted">Check back soon for new challenges!</p>
+    <a href="#" class="btn btn-primary mt-3">
+        <i class="fas fa-sync-alt"></i> Refresh
+    </a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filter challenges based on selected filters
+function filterChallenges() {
+    const category = $('#categoryFilter').val().toLowerCase();
+    const difficulty = $('#difficultyFilter').val();
+    const status = $('#statusFilter').val();
+    
+    $('.challenge-card').each(function() {
+        const card = $(this);
+        const cardCategory = card.data('category');
+        const cardDifficulty = card.data('difficulty');
+        const cardStatus = card.data('status');
+        
+        const categoryMatch = !category || cardCategory.includes(category);
+        const difficultyMatch = !difficulty || cardDifficulty === difficulty;
+        const statusMatch = status === 'all' || cardStatus === status;
+        
+        if (categoryMatch && difficultyMatch && statusMatch) {
+            card.show();
+        } else {
+            card.hide();
+        }
+    });
+}
+
+// Initialize filters
+$(document).ready(function() {
+    // Filter change events
+    $('#categoryFilter, #difficultyFilter, #statusFilter').change(filterChallenges);
+    
+    // Categorize challenges for tabs
+    $('.challenge-card').each(function() {
+        const category = $(this).data('category');
+        const cardHtml = $(this).html();
+        
+        if (category.includes('web')) {
+            $('.web-challenges').append(`<div class="col-md-6 col-lg-4">${cardHtml}</div>`);
+        } else if (category.includes('network')) {
+            $('.network-challenges').append(`<div class="col-md-6 col-lg-4">${cardHtml}</div>`);
+        } else if (category.includes('crypto')) {
+            $('.crypto-challenges').append(`<div class="col-md-6 col-lg-4">${cardHtml}</div>`);
+        }
+    });
+    
+    // Show message if no challenges in a category
+    $('.tab-pane').each(function() {
+        const tabId = $(this).attr('id');
+        if (tabId !== 'all' && $(this).find('.col-md-6').length === 0) {
+            $(this).html(`
+                <div class="text-center py-5 my-5">
+                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                    <h4>No Challenges Available</h4>
+                    <p class="text-muted">Check back soon for new ${tabId} challenges!</p>
+                </div>
+            `);
+        }
+    });
+});
+</script>
 {% endblock %}

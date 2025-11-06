@@ -163,6 +163,11 @@
                                 <i class="fas fa-flag"></i> Challenges
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('security_tools') }}">
+                                <i class="fas fa-tools"></i> Security Tools
+                            </a>
+                        </li>
                         {% if current_user.role == 'admin' %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('admin') }}">

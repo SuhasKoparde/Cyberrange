@@ -2,9 +2,108 @@
 
 {% block title %}{{ challenge.name }} - Cyber Range{% endblock %}
 
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
+<script>hljs.highlightAll();</script>
+<style>
+    .challenge-content {
+        line-height: 1.8;
+    }
+    .challenge-content h2, 
+    .challenge-content h3, 
+    .challenge-content h4 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    .challenge-content pre {
+        border-radius: 6px;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .challenge-content code {
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9em;
+    }
+    .challenge-content table {
+        width: 100%;
+        margin: 1.5rem 0;
+        border-collapse: collapse;
+    }
+    .challenge-content table {
+        width: 100%;
+        margin: 1.5rem 0;
+        border-collapse: collapse;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .challenge-content th, 
+    .challenge-content td {
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .challenge-content thead th {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .challenge-content tbody tr:nth-child(odd) {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .challenge-content tbody tr:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+    
+    .challenge-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.25);
+        transition: all 0.2s ease;
+    }
+    
+    /* Improved text contrast */
+    .challenge-content td {
+        color: #f0f0f0;
+    }
+    
+    .challenge-content th {
+        color: #ffffff;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Make code blocks more visible */
+    .challenge-content code {
+        background-color: rgba(0, 0, 0, 0.3);
+        color: #f8f9fa;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: 'Fira Code', monospace;
+    }
+    .challenge-content blockquote {
+        border-left: 4px solid #6c757d;
+        padding-left: 1rem;
+        margin: 1.5rem 0;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-lg-8" id="challenge-content">
         <div class="card">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
@@ -27,8 +126,49 @@
                     <span class="badge bg-info">{{ challenge.points }} points</span>
                 </div>
                 
-                <h5>Description</h5>
-                <p class="mb-4">{{ challenge.description }}</p>
+                {% if challenge_content %}
+                    <div class="challenge-content">
+                        {{ challenge_content|safe }}
+                    </div>
+                {% else %}
+                    <div class="challenge-description mb-4">
+                        <h5>Description</h5>
+                        <p>{{ challenge.description }}</p>
+                        
+                        {% if challenge.how_to_execute %}
+                            <div class="card mt-4">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-terminal me-2"></i>How to Execute</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="how-to-execute">
+                                        {{ challenge.how_to_execute|replace('\n', '<br>')|safe }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if challenge.real_world_use %}
+                            <div class="card mt-4">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="fas fa-globe me-2"></i>Real World Application</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="real-world-use">
+                                        {{ challenge.real_world_use|replace('\n', '<br>')|safe }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if challenge.hints %}
+                            <div class="alert alert-info mt-4">
+                                <h6><i class="fas fa-lightbulb me-2"></i>Hint</h6>
+                                <p class="mb-0">{{ challenge.hints }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
                 
                 {% if challenge.target_ip %}
                 <div class="alert alert-info">
@@ -83,7 +223,16 @@
     </div>
     
     <div class="col-lg-4">
-        <div class="card">
+        <div class="sticky-top" style="top: 20px;">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-list-ul me-2"></i>Table of Contents</h6>
+                </div>
+                <div class="card-body py-2" id="toc">
+                    <!-- Table of contents will be generated by JavaScript -->
+                </div>
+            </div>
+            <div class="card">
             <div class="card-header">
                 <h6 class="mb-0">
                     <i class="fas fa-info-circle"></i> Challenge Info
@@ -157,10 +306,109 @@
                     <code>nikto -h {{ challenge.target_ip or 'TARGET_IP' }}</code><br>
                     <code>dirb http://{{ challenge.target_ip or 'TARGET_IP' }}/</code>
                 </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Generate table of contents
+function generateTOC() {
+    const content = document.getElementById('challenge-content');
+    const headings = content.querySelectorAll('h2, h3, h4');
+    const toc = document.getElementById('toc');
+    
+    if (headings.length > 0) {
+        let tocHTML = '<ul class="nav flex-column">';
+        let currentLevel = 2; // Start with h2
+        
+        headings.forEach((heading, index) => {
+            const level = parseInt(heading.tagName.substring(1));
+            const id = `section-${index}`;
+            heading.id = id;
+            
+            if (level > currentLevel) {
+                tocHTML += '<ul class="nav flex-column ms-3">';
+            } else if (level < currentLevel) {
+                tocHTML += '</ul>';
+            }
+            
+            tocHTML += `
+                <li class="nav-item">
+                    <a class="nav-link py-1" href="#${id}">
+                        <i class="fas fa-chevron-right me-2 small"></i>
+                        ${heading.textContent}
+                    </a>
+                </li>
+            `;
+            
+            currentLevel = level;
+        });
+        
+        // Close any remaining open lists
+        while (currentLevel > 2) {
+            tocHTML += '</ul>';
+            currentLevel--;
+        }
+        
+        tocHTML += '</ul>';
+        toc.innerHTML = tocHTML;
+    } else {
+        toc.innerHTML = '<p class="text-muted small mb-0">No sections available</p>';
+    }
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+// Run when document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    generateTOC();
+    
+    // Add copy buttons to code blocks
+    document.querySelectorAll('pre code').forEach((block) => {
+        const pre = block.parentNode;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'position-relative';
+        
+        // Create copy button
+        const button = document.createElement('button');
+        button.className = 'btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2';
+        button.style.zIndex = '1';
+        button.innerHTML = '<i class="far fa-copy"></i>';
+        button.setAttribute('data-bs-toggle', 'tooltip');
+        button.setAttribute('title', 'Copy to clipboard');
+        
+        button.addEventListener('click', function() {
+            navigator.clipboard.writeText(block.textContent).then(() => {
+                const originalTitle = button.getAttribute('title');
+                button.setAttribute('title', 'Copied!');
+                const tooltip = bootstrap.Tooltip.getInstance(button);
+                if (tooltip) {
+                    tooltip.setContent({'.tooltip-inner': 'Copied!'});
+                    tooltip.show();
+                }
+                
+                setTimeout(() => {
+                    button.setAttribute('title', originalTitle);
+                    if (tooltip) {
+                        tooltip.setContent({'.tooltip-inner': originalTitle});
+                    }
+                }, 2000);
+            });
+        });
+        
+        // Wrap the pre tag with our wrapper and add the button
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+        pre.insertBefore(button, block);
+    });
+});
+</script>
 
 <div class="mt-4">
     <a href="{{ url_for('challenges') }}" class="btn btn-secondary">

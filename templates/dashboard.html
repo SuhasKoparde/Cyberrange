@@ -3,6 +3,7 @@
 {% block title %}Dashboard - Cyber Range{% endblock %}
 
 {% block content %}
+<div class="container py-4">
 <div class="row">
     <div class="col-12">
         <h2 class="mb-4">
@@ -68,24 +69,31 @@
                     <i class="fas fa-chart-line"></i> System Status
                 </h5>
             </div>
+            <div class="card h-100">
             <div class="card-body">
                 <div id="system-metrics">
-                    <div class="row">
+                    <div class="row g-4">
                         <div class="col-md-4">
                             <div class="text-center">
-                                <canvas id="cpuChart" width="100" height="100"></canvas>
+                                <div class="chart-container">
+                                    <canvas id="cpuChart"></canvas>
+                                </div>
                                 <p class="mt-2 mb-0">CPU Usage</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-center">
-                                <canvas id="memoryChart" width="100" height="100"></canvas>
+                                <div class="chart-container">
+                                    <canvas id="memoryChart"></canvas>
+                                </div>
                                 <p class="mt-2 mb-0">Memory Usage</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-center">
-                                <canvas id="diskChart" width="100" height="100"></canvas>
+                                <div class="chart-container">
+                                    <canvas id="diskChart"></canvas>
+                                </div>
                                 <p class="mt-2 mb-0">Disk Usage</p>
                             </div>
                         </div>
@@ -164,10 +172,48 @@
         </div>
     </div>
 </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    /* Fix for dashboard layout and scrolling */
+    body {
+        overflow-x: hidden;
+    }
+    
+    .card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* System metrics container */
+    #system-metrics {
+        min-height: 200px;
+    }
+    
+    /* Main content area */
+    .main-content {
+        min-height: calc(100vh - 200px);
+        padding-bottom: 2rem;
+    }
+    
+    /* Fix for chart containers */
+    .chart-container {
+        position: relative;
+        height: 150px;
+        width: 100%;
+    }
+</style>
 <script>
 function createDoughnutChart(canvasId, percentage, color) {
     const ctx = document.getElementById(canvasId).getContext('2d');
@@ -193,7 +239,47 @@ function createDoughnutChart(canvasId, percentage, color) {
     });
 }
 
+let metricsUpdateInterval;
+let isPageVisible = true;
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+    isPageVisible = !document.hidden;
+    if (isPageVisible && !metricsUpdateInterval) {
+        startMetricsUpdates();
+    } else if (!isPageVisible && metricsUpdateInterval) {
+        stopMetricsUpdates();
+    }
+});
+
+function startMetricsUpdates() {
+    // Clear any existing interval to prevent duplicates
+    stopMetricsUpdates();
+    
+    // Only start updates if we're on the dashboard
+    if (!document.querySelector('.dashboard-container')) return;
+    
+    // Initial update with a small delay
+    setTimeout(updateSystemMetrics, 100);
+    
+    // Set up periodic updates (every 5 seconds)
+    metricsUpdateInterval = setInterval(updateSystemMetrics, 5000);
+    
+    // Clean up on page hide
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', stopMetricsUpdates);
+}
+
+function stopMetricsUpdates() {
+    if (metricsUpdateInterval) {
+        clearInterval(metricsUpdateInterval);
+        metricsUpdateInterval = null;
+    }
+}
+
 function updateSystemMetrics() {
+    if (!isPageVisible) return;
+    
     fetch('/system_status')
         .then(response => response.json())
         .then(data => {
@@ -214,17 +300,28 @@ function updateSystemMetrics() {
         .catch(error => console.error('Error fetching system status:', error));
 }
 
-// Initialize charts
+// Initialize charts when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    window.cpuChart = createDoughnutChart('cpuChart', 0, '#e94560');
-    window.memoryChart = createDoughnutChart('memoryChart', 0, '#0f3460');
-    window.diskChart = createDoughnutChart('diskChart', 0, '#ffc107');
-    
-    // Initial load
-    updateSystemMetrics();
-    
-    // Update every 5 seconds
-    setInterval(updateSystemMetrics, 5000);
+    // Only initialize if elements exist
+    if (document.getElementById('cpuChart')) {
+        // Wait for all resources to be loaded
+        window.addEventListener('load', function() {
+            // Use requestAnimationFrame to ensure smooth rendering
+            requestAnimationFrame(function() {
+                window.cpuChart = createDoughnutChart('cpuChart', 0, '#e94560');
+                window.memoryChart = createDoughnutChart('memoryChart', 0, '#0f3460');
+                window.diskChart = createDoughnutChart('diskChart', 0, '#16213e');
+                
+                // Start metrics updates with a small delay
+                setTimeout(startMetricsUpdates, 1000);
+            });
+        });
+    }
+});
+
+// Clean up when leaving the page
+window.addEventListener('beforeunload', function() {
+    stopMetricsUpdates();
 });
 </script>
 {% endblock %}

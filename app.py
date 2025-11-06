@@ -31,6 +31,8 @@ class Challenge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    how_to_execute = db.Column(db.Text, nullable=True)
+    real_world_use = db.Column(db.Text, nullable=True)
     difficulty = db.Column(db.String(20), nullable=False)
     category = db.Column(db.String(50), nullable=False)
     points = db.Column(db.Integer, default=100)
@@ -136,6 +138,37 @@ def challenges():
                          challenges=challenges, 
                          progress_dict=progress_dict)
 
+import os
+import markdown
+
+def read_challenge_content(challenge_name):
+    """Read challenge content from markdown file"""
+    try:
+        # Convert challenge name to filename format
+        filename = challenge_name.lower().replace(' ', '_') + '.md'
+        filepath = os.path.join('challenges', filename)
+        
+        if os.path.exists(filepath):
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Convert markdown to HTML
+            html_content = markdown.markdown(
+                content,
+                extensions=[
+                    'fenced_code',
+                    'tables',
+                    'codehilite',
+                    'nl2br',
+                    'sane_lists'
+                ]
+            )
+            return html_content
+    except Exception as e:
+        print(f"Error reading challenge content: {str(e)}")
+    
+    return None
+
 @app.route('/challenge/<int:challenge_id>')
 @login_required
 def challenge_detail(challenge_id):
@@ -145,9 +178,13 @@ def challenge_detail(challenge_id):
         challenge_id=challenge_id
     ).first()
     
+    # Get challenge content from markdown file
+    challenge_content = read_challenge_content(challenge.name)
+    
     return render_template('challenge_detail.html', 
                          challenge=challenge, 
-                         progress=progress)
+                         progress=progress,
+                         challenge_content=challenge_content)
 
 @app.route('/submit_flag', methods=['POST'])
 @login_required
@@ -182,21 +219,21 @@ def submit_flag():
         db.session.commit()
         return jsonify({'success': False, 'message': 'Incorrect flag. Try again!'})
 
+@app.route('/security-tools')
+@login_required
+def security_tools():
+    return render_template('security_tools.html')
+
 @app.route('/admin')
 @login_required
 def admin():
     if current_user.role != 'admin':
-        flash('Access denied')
+        flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('dashboard'))
     
     users = User.query.all()
-    challenges = Challenge.query.all()
-    vm_status = VMStatus.query.all()
-    
-    return render_template('admin.html', 
-                         users=users, 
-                         challenges=challenges,
-                         vm_status=vm_status)
+    vms = VMStatus.query.all()
+    return render_template('admin.html', users=users, vms=vms)
 
 @app.route('/vm_control/<action>/<vm_name>')
 @login_required
@@ -281,124 +318,167 @@ def init_db():
         )
         db.session.add(admin)
     
-    # Create sample challenges
+    # Create sample challenges if none exist
     if not Challenge.query.first():
         challenges = [
+            # Web Security Challenges
             {
-                'name': 'Basic Web Exploitation',
-                'description': 'Find and exploit a simple SQL injection vulnerability',
-                'difficulty': 'Easy',
+                'name': 'SQL Injection Mastery',
+                'description': 'Master SQL injection techniques from basic to advanced, including blind and time-based SQLi. This challenge covers various SQL injection vectors and their exploitation methods.',
+                'how_to_execute': '1. Identify the vulnerable parameter in the web application\n2. Test for SQL injection using basic payloads like `\' OR 1=1 --`\n3. Enumerate the database structure using UNION-based or error-based techniques\n4. Extract sensitive information from the database',
+                'real_world_use': 'SQL injection is one of the most critical web application vulnerabilities. Understanding it helps in:\n- Securing web applications against data breaches\n- Conducting penetration tests for web applications\n- Complying with security standards like OWASP Top 10\n- Preventing unauthorized data access and manipulation',
+                'difficulty': 'Hard',
                 'category': 'Web Security',
-                'points': 100,
+                'points': 500,
                 'vm_name': 'vulnerable-web',
                 'target_ip': '192.168.1.10',
-                'flag': 'CTF{sql_injection_basic}',
-                'hints': 'Look for login forms that might not validate input properly'
+                'flag': 'CTF{sql_injection_master}',
+                'hints': 'Try different SQL injection techniques and consider out-of-band methods. Look for error messages that might reveal database structure.'
             },
             {
-                'name': 'Network Reconnaissance',
-                'description': 'Perform network scanning and identify open services',
-                'difficulty': 'Easy',
-                'category': 'Network Security',
-                'points': 150,
-                'vm_name': 'target-server',
-                'target_ip': '192.168.1.20',
-                'flag': 'CTF{nmap_discovery}',
-                'hints': 'Use nmap to scan for open ports and services'
-            },
-            {
-                'name': 'Privilege Escalation',
-                'description': 'Gain root access on a Linux system',
-                'difficulty': 'Medium',
-                'category': 'System Security',
-                'points': 250,
-                'vm_name': 'linux-target',
-                'target_ip': '192.168.1.30',
-                'flag': 'CTF{root_access_gained}',
-                'hints': 'Check for SUID binaries and misconfigurations'
-            },
-            {
-                'name': 'Password Cracking with John the Ripper',
-                'description': 'Crack various password hashes using John the Ripper and advanced techniques',
-                'difficulty': 'Medium',
-                'category': 'Cryptography',
-                'points': 300,
-                'vm_name': 'kali-attacker',
-                'target_ip': '192.168.1.100',
-                'flag': 'CTF{john_the_ripper_master}',
-                'hints': 'Use different attack modes: dictionary, brute force, and rule-based attacks'
-            },
-            {
-                'name': 'Brute Force Attack Simulation',
-                'description': 'Perform brute force attacks against SSH, HTTP, and FTP services',
+                'name': 'Brute Force Attack Lab',
+                'description': 'Learn and practice brute force attacks against various services including SSH, FTP, and web logins using tools like Hydra and Medusa.',
+                'how_to_execute': '1. Identify the target service and its authentication mechanism\n2. Prepare a wordlist of common passwords\n3. Use tools like Hydra or Medusa to perform the attack\n4. Analyze the results and identify weak credentials\n5. Mitigate the attack by implementing account lockout policies',
+                'real_world_use': 'Brute force attacks are commonly used by attackers to gain unauthorized access. Understanding them helps in:\n- Implementing strong password policies\n- Setting up account lockout mechanisms\n- Configuring rate limiting on authentication endpoints\n- Conducting security assessments of authentication systems',
                 'difficulty': 'Medium',
                 'category': 'Authentication Security',
-                'points': 250,
+                'points': 350,
                 'vm_name': 'linux-target',
                 'target_ip': '192.168.1.30',
-                'flag': 'CTF{hydra_brute_force}',
-                'hints': 'Use Hydra with custom wordlists and learn about rate limiting'
+                'flag': 'CTF{brute_force_success}',
+                'hints': 'Try different wordlists and consider username enumeration. Look for default credentials and common password patterns.'
             },
             {
-                'name': 'Directory Enumeration with Gobuster',
-                'description': 'Discover hidden directories and files using Gobuster and similar tools',
+                'name': 'Directory and File Enumeration',
+                'description': 'Discover hidden directories, backup files, and sensitive information using tools like Gobuster, Dirb, and Dirsearch.',
+                'how_to_execute': '1. Use Gobuster with common wordlists (e.g., common.txt, directory-list-2.3-medium.txt)\n2. Look for common backup file extensions (.bak, .old, .swp)\n3. Check for sensitive files (robots.txt, .git/, .env, etc.)\n4. Analyze server responses for interesting status codes',
+                'real_world_use': 'Directory enumeration is crucial for:\n- Identifying exposed sensitive files in security assessments\n- Finding hidden endpoints in bug bounty programs\n- Understanding web application structure during penetration tests\n- Preventing information disclosure in production environments',
                 'difficulty': 'Easy',
                 'category': 'Web Security',
                 'points': 200,
                 'vm_name': 'vulnerable-web',
                 'target_ip': '192.168.1.10',
-                'flag': 'CTF{gobuster_directory_found}',
-                'hints': 'Use different wordlists and file extensions to find hidden content'
+                'flag': 'CTF{hidden_directories_found}',
+                'hints': 'Try different wordlists and file extensions. Pay attention to HTTP status codes (200, 301, 403, etc.) and response sizes.'
             },
+            
+            # Network Security Challenges
             {
-                'name': 'DoS Attack Simulation',
-                'description': 'Simulate Denial of Service attacks using hping3 and learn mitigation',
-                'difficulty': 'Hard',
+                'name': 'Network Reconnaissance',
+                'description': 'Master network scanning, host discovery, and service enumeration using Nmap and other network scanning tools.',
+                'how_to_execute': '1. Perform host discovery using ping sweeps\n2. Conduct port scanning with Nmap (TCP SYN, UDP, etc.)\n3. Identify services and their versions\n4. Map the network topology\n5. Document all findings for security assessment reports',
+                'real_world_use': 'Network reconnaissance is fundamental for:\n- Security assessments and penetration testing\n- Network inventory and documentation\n- Identifying unauthorized devices\n- Vulnerability assessment and management\n- Security monitoring and incident response',
+                'difficulty': 'Easy',
                 'category': 'Network Security',
-                'points': 400,
+                'points': 250,
                 'vm_name': 'target-server',
                 'target_ip': '192.168.1.20',
-                'flag': 'CTF{dos_attack_successful}',
-                'hints': 'Use SYN flood, UDP flood, and HTTP flood techniques responsibly'
+                'flag': 'CTF{network_recon_complete}',
+                'hints': 'Start with basic Nmap scans and gradually use more advanced options. Pay attention to service versions and potential vulnerabilities.'
             },
             {
-                'name': 'Vulnerability Assessment',
-                'description': 'Perform comprehensive vulnerability scanning using Nikto and Nmap scripts',
-                'difficulty': 'Medium',
-                'category': 'Vulnerability Management',
-                'points': 350,
-                'vm_name': 'vulnerable-web',
-                'target_ip': '192.168.1.10',
-                'flag': 'CTF{vuln_assessment_complete}',
-                'hints': 'Use Nikto for web vulnerabilities and Nmap NSE scripts for system vulnerabilities'
+                'name': 'Denial of Service (DoS) Lab',
+                'description': 'Understand and simulate various DoS/DDoS attack vectors, including application layer and network layer attacks, along with their mitigations.',
+                'how_to_execute': '1. Identify potential attack vectors in the target system\n2. Simulate different types of DoS attacks (SYN flood, HTTP flood, etc.)\n3. Monitor system resources during attacks\n4. Implement and test mitigation strategies\n5. Document the impact and effectiveness of mitigations',
+                'real_world_use': 'Understanding DoS attacks is critical for:\n- Building resilient network architectures\n- Implementing effective rate limiting and traffic filtering\n- Incident response to DDoS attacks\n- Compliance with service level agreements (SLAs)\n- Capacity planning and resource allocation',
+                'difficulty': 'Hard',
+                'category': 'Network Security',
+                'points': 450,
+                'vm_name': 'target-server',
+                'target_ip': '192.168.1.20',
+                'flag': 'CTF{dos_mitigation_success}',
+                'hints': 'Focus on different layers of the OSI model for attack vectors. Consider both network and application layer attacks.'
             },
+            
+            # System Security Challenges
             {
-                'name': 'Social Engineering & OSINT',
-                'description': 'Gather intelligence using theHarvester and OSINT techniques',
+                'name': 'Privilege Escalation',
+                'description': 'Escalate privileges from a low-level user to root on a Linux system by exploiting various system misconfigurations and vulnerabilities.',
+                'how_to_execute': '1. Enumerate the system for potential privilege escalation vectors\n2. Check for misconfigured file permissions (SUID/SGID binaries, writable files)\n3. Look for kernel vulnerabilities and outdated software\n4. Exploit identified vulnerabilities to gain root access\n5. Document the process and suggest remediation steps',
+                'real_world_use': 'Privilege escalation is essential for:\n- System hardening and security assessments\n- Identifying and fixing security misconfigurations\n- Understanding attacker techniques for blue team operations\n- Compliance with security standards (CIS Benchmarks, STIGs)\n- Security operations and incident response',
+                'difficulty': 'Hard',
+                'category': 'System Security',
+                'points': 500,
+                'vm_name': 'linux-target',
+                'target_ip': '192.168.1.30',
+                'flag': 'CTF{root_escalation_complete}',
+                'hints': 'Check for misconfigurations in sudo rules, SUID binaries, and kernel exploits. Use tools like LinPEAS for automated enumeration.'
+            },
+            
+            # Cryptography Challenges
+            {
+                'name': 'Password Cracking Techniques',
+                'description': 'Learn and practice password cracking techniques using tools like John the Ripper, Hashcat, and rainbow tables.',
+                'how_to_execute': '1. Identify the hash type (MD5, SHA-1, bcrypt, etc.)\n2. Choose the appropriate cracking tool and attack mode\n3. Use wordlists or generate custom password candidates\n4. Optimize cracking performance with rules and masks\n5. Analyze results and suggest stronger password policies',
+                'real_world_use': 'Password cracking is important for:\n- Security assessments and penetration testing\n- Password policy evaluation and improvement\n- Digital forensics and incident response\n- Security awareness training\n- Compliance with password security standards',
                 'difficulty': 'Medium',
-                'category': 'Information Gathering',
-                'points': 300,
+                'category': 'Cryptography',
+                'points': 400,
                 'vm_name': 'kali-attacker',
                 'target_ip': '192.168.1.100',
-                'flag': 'CTF{osint_master}',
-                'hints': 'Use theHarvester, sublist3r, and manual OSINT techniques'
+                'flag': 'CTF{password_cracking_master}',
+                'hints': 'Try different attack modes: dictionary, hybrid, and rule-based attacks'
+            },
+            
+            # Advanced Challenges
+            {
+                'name': 'Advanced Web Exploitation',
+                'description': 'Tackle advanced web vulnerabilities including XXE (XML External Entity), SSTI (Server-Side Template Injection), and deserialization vulnerabilities that are commonly found in modern web applications.',
+                'how_to_execute': '1. Map the application and identify input points\n2. Test for XXE in XML processing endpoints\n3. Identify template injection points for SSTI\n4. Look for serialized objects that might be vulnerable to deserialization attacks\n5. Develop and execute exploits for identified vulnerabilities',
+                'real_world_use': 'Advanced web exploitation skills are crucial for:\n- Identifying complex security flaws in web applications\n- Conducting thorough penetration tests\n- Understanding modern web application attack vectors\n- Developing secure coding practices\n- Security research and bug bounty programs',
+                'difficulty': 'Hard',
+                'category': 'Web Security',
+                'points': 600,
+                'vm_name': 'vulnerable-web',
+                'target_ip': '192.168.1.10',
+                'flag': 'CTF{advanced_web_exploit}',
+                'hints': 'Look for less common injection points and edge cases. Pay attention to how the application processes different types of input.'
             },
             {
                 'name': 'Wireless Security Assessment',
-                'description': 'Assess wireless network security using Aircrack-ng suite',
+                'description': 'Learn to assess and exploit wireless network security, including WPA2-PSK, WPA3, and enterprise wireless networks, using tools like Aircrack-ng, Wireshark, and Hashcat.',
+                'how_to_execute': '1. Set up your wireless adapter in monitor mode\n2. Capture wireless traffic and identify target networks\n3. Capture WPA handshakes\n4. Perform offline password cracking\n5. Test for WPS vulnerabilities\n6. Document findings and suggest security improvements',
+                'real_world_use': 'Wireless security assessment is essential for:\n- Securing organizational wireless networks\n- Conducting wireless penetration tests\n- Identifying rogue access points\n- Complying with wireless security standards\n- Security research and responsible disclosure',
                 'difficulty': 'Hard',
                 'category': 'Wireless Security',
-                'points': 450,
+                'points': 500,
                 'vm_name': 'kali-attacker',
                 'target_ip': '192.168.1.100',
-                'flag': 'CTF{wireless_security_expert}',
-                'hints': 'Practice WEP/WPA cracking and understand wireless attack vectors'
+                'flag': 'CTF{wifi_security_expert}',
+                'hints': 'Focus on WPA2 handshake capture and offline cracking. Consider using GPU acceleration for faster password cracking.'
+            },
+            {
+                'name': 'Digital Forensics Challenge',
+                'description': 'Master digital forensics techniques by analyzing disk images, memory dumps, and network traffic to uncover hidden data, recover deleted files, and investigate security incidents.',
+                'how_to_execute': '1. Acquire disk images and memory dumps using forensic tools\n2. Analyze file systems for hidden or deleted files\n3. Examine network traffic captures for suspicious activity\n4. Recover and analyze browser history and system artifacts\n5. Document findings in a forensically sound manner\n6. Create a comprehensive incident report',
+                'real_world_use': 'Digital forensics is critical for:\n- Incident response and investigation\n- Data recovery and evidence collection\n- Legal proceedings and compliance\n- Security breach analysis\n- Malware analysis and reverse engineering',
+                'difficulty': 'Medium',
+                'category': 'Digital Forensics',
+                'points': 400,
+                'vm_name': 'kali-attacker',
+                'target_ip': '192.168.1.100',
+                'flag': 'CTF{forensics_solved}',
+                'hints': 'Look for hidden files, steganography, unusual network patterns, and timestamps. Pay attention to file signatures and headers.'
             }
         ]
         
         for challenge_data in challenges:
-            challenge = Challenge(**challenge_data)
+            challenge = Challenge(
+                name=challenge_data['name'],
+                description=challenge_data['description'],
+                how_to_execute=challenge_data.get('how_to_execute', ''),
+                real_world_use=challenge_data.get('real_world_use', ''),
+                difficulty=challenge_data['difficulty'],
+                category=challenge_data['category'],
+                points=challenge_data['points'],
+                vm_name=challenge_data.get('vm_name', ''),
+                target_ip=challenge_data.get('target_ip', ''),
+                flag=challenge_data.get('flag', ''),
+                hints=challenge_data.get('hints', '')
+            )
             db.session.add(challenge)
+        
+        db.session.commit()
     
     # Create sample VM status entries
     if not VMStatus.query.first():
