@@ -1,19 +1,15 @@
 <div align="center">
   <h1>🔥 Cyber Range</h1>
-  <h3>An Immersive Cybersecurity Training Platform</h3>
+  <h3>Kali Linux Cybersecurity Training Platform</h3>
   
+  [![Kali Linux](https://img.shields.io/badge/Kali_Linux-2023.3-557C94?logo=kali-linux&logoColor=white)](https://www.kali.org/)
   [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
   [![Flask](https://img.shields.io/badge/Flask-2.0.1-green.svg)](https://flask.palletsprojects.com/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![GitHub stars](https://img.shields.io/github/stars/SuhasKoparde/Cyberrange?style=social)](https://github.com/SuhasKoparde/Cyberrange/stargazers)
-  [![GitHub forks](https://img.shields.io/github/forks/SuhasKoparde/Cyberrange?style=social)](https://github.com/SuhasKoparde/Cyberrange/network/members)
   
-  [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/SuhasKoparde/Cyberrange)
-  
-  <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="Contributions Welcome">
-  <a href="https://github.com/SuhasKoparde/Cyberrange/issues">
-    <img src="https://img.shields.io/github/issues/SuhasKoparde/Cyberrange" alt="GitHub issues">
-  </a>
+  <img src="https://img.shields.io/badge/Kali%20Linux-Optimized-557C94" alt="Kali Linux Optimized">
+  <img src="https://img.shields.io/badge/Offline-Supported-brightgreen" alt="Offline Supported">
 </div>
 
 ## 🚀 Overview
@@ -89,67 +85,155 @@ graph TD
 - Input sanitization
 - Secure session management
 
-## 📦 Installation
+## 🚀 Quick Start for Kali Linux
 
 ### Prerequisites
-- Python 3.8+
+- Kali Linux 2023.3 or later
+- Python 3.8+ (pre-installed on Kali)
 - pip (Python package manager)
-- Virtual environment (recommended)
+- Git (for initial setup)
 
-> **For Kali Linux users**: See the [Kali Linux Setup Guide](KALI_SETUP.md) for specific instructions.
+### Installation
 
-### Setup Instructions
+1. **Update your system**
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
 
-1. **Clone the repository**
+2. **Install required system packages**
+   ```bash
+   sudo apt install -y python3-pip python3-venv git
+   ```
+
+3. **Clone the repository**
    ```bash
    git clone https://github.com/SuhasKoparde/Cyberrange.git
    cd Cyberrange
    ```
 
-2. **Create and activate virtual environment**
+4. **Set up virtual environment**
    ```bash
-   # On Windows
-   python -m venv venv
-   .\venv\Scripts\activate
-   
-   # On macOS/Linux
    python3 -m venv venv
    source venv/bin/activate
    ```
 
-3. **Install dependencies**
+5. **Install Python dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Initialize the database**
+6. **Initialize the database**
    ```bash
-   python -c "from app import app, db; app.app_context().push(); db.create_all()"
-   python -c "from app import init_db; init_db()"
+   python3 -c "from app import app, db; app.app_context().push(); db.create_all()"
+   python3 -c "from app import init_db; init_db()"
    ```
 
-5. **Run the application**
+### Running the Application
+
+1. **Start the development server**
    ```bash
-   python app.py
+   python3 app.py
    ```
 
-6. **Access the application**
+2. **Access the application**
    - Open your browser and go to: http://localhost:5000
-   - Admin credentials: `admin` / `admin123`
+   - Admin Panel: http://localhost:5000/admin
+     - Username: `admin`
+     - Password: `admin123`
 
-## 📚 Documentation
+### Offline Setup
+For air-gapped environments, see the [Offline Installation Guide](KALI_SETUP.md#offline-setup) in the Kali Linux Setup documentation.
 
-For detailed documentation, please visit our [Wiki](https://github.com/SuhasKoparde/Cyberrange/wiki).
+### Running as a Service
+To run the application as a background service on Kali Linux:
+
+1. Create a systemd service file:
+   ```bash
+   sudo nano /etc/systemd/system/cyberrange.service
+   ```
+
+2. Add the following configuration (adjust paths as needed):
+   ```ini
+   [Unit]
+   Description=Cyber Range Application
+   After=network.target
+
+   [Service]
+   User=$USER
+   WorkingDirectory=/path/to/Cyberrange
+   ExecStart=/path/to/Cyberrange/venv/bin/python3 app.py
+   Restart=always
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. Enable and start the service:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable cyberrange
+   sudo systemctl start cyberrange
+   ```
+
+For detailed information and troubleshooting, see the complete [Kali Linux Setup Guide](KALI_SETUP.md).
+
+## 🛠️ Advanced Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root with the following variables:
+
+```env
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///cyberrange.db
+```
+
+### Firewall Configuration
+
+For optimal security, configure your firewall to restrict access:
+
+```bash
+# Allow HTTP traffic (if exposing to network)
+sudo ufw allow 5000/tcp
+
+# Or for production with Nginx
+sudo ufw allow 'Nginx Full'
+```
+
+### Performance Tuning
+
+For better performance in production:
+
+1. **Use Gunicorn with Nginx**:
+   ```bash
+   pip install gunicorn
+   gunicorn -w 4 -b 0.0.0.0:5000 app:app
+   ```
+
+2. **Configure Nginx as reverse proxy** (recommended for production)
+
+## 📝 Documentation
+
+### Kali Linux Documentation
+- [Kali Linux Setup Guide](KALI_SETUP.md) - Complete setup and configuration
+- [Offline Deployment](KALI_SETUP.md#offline-setup) - For air-gapped environments
+- [Service Management](KALI_SETUP.md#running-as-a-service) - Running as a system service
+
+### API Documentation
+Access the interactive API documentation at `http://localhost:5000/api/docs` after starting the application.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+We welcome contributions from the community! Please follow these steps:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Read our [Code of Conduct](CODE_OF_CONDUCT.md)
+2. Fork the repository
+3. Create a feature branch (`git checkout -b feature/feature-name`)
+4. Commit your changes (`git commit -m 'Add some feature'`)
+5. Push to the branch (`git push origin feature/feature-name`)
+6. Open a Pull Request
 
 ## 📄 License
 
@@ -157,15 +241,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Hat tip to anyone whose code was used
-- Inspiration
-- References
+- Kali Linux Team for the amazing penetration testing platform
+- Open-source community for valuable tools and libraries
+- Security researchers who contribute to making the digital world safer
 
-## 📬 Contact
+## 📬 Support
 
-Suhas Koparde - [@YourTwitter](https://twitter.com/yourhandle) - your.email@example.com
+For support, please open an issue in the [GitHub repository](https://github.com/SuhasKoparde/Cyberrange/issues).
 
-Project Link: [https://github.com/SuhasKoparde/Cyberrange](https://github.com/SuhasKoparde/Cyberrange)
+---
+
+<div align="center">
+  <p>Made with ❤️ for the InfoSec Community</p>
+  <p>🔒 Keep Learning, Keep Hacking (Ethically!)</p>
+</div>
 
 ## Getting Started
 1. Clone the repository:
