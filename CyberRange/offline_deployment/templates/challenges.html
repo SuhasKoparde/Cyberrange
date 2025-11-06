@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Challenges - Cyber Range{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-flag"></i> Challenges
+        </h2>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for challenge in challenges %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">{{ challenge.name }}</h5>
+                    {% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}
+                        <i class="fas fa-check-circle text-success fa-lg" title="Completed"></i>
+                    {% endif %}
+                </div>
+                
+                <p class="card-text">{{ challenge.description }}</p>
+                
+                <div class="mb-3">
+                    <span class="badge bg-secondary me-2">{{ challenge.category }}</span>
+                    <span class="badge bg-{% if challenge.difficulty == 'Easy' %}success{% elif challenge.difficulty == 'Medium' %}warning{% else %}danger{% endif %}">
+                        {{ challenge.difficulty }}
+                    </span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">
+                        <i class="fas fa-star"></i> {{ challenge.points }} points
+                    </span>
+                    {% if challenge.id in progress_dict %}
+                        <span class="text-muted small">
+                            Attempts: {{ progress_dict[challenge.id].attempts }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                {% if challenge.target_ip %}
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-bullseye"></i> Target: {{ challenge.target_ip }}
+                    </small>
+                </div>
+                {% endif %}
+                
+                <a href="{{ url_for('challenge_detail', challenge_id=challenge.id) }}" 
+                   class="btn btn-primary w-100">
+                    {% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}
+                        <i class="fas fa-eye"></i> Review Challenge
+                    {% else %}
+                        <i class="fas fa-play"></i> Start Challenge
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not challenges %}
+<div class="text-center mt-5">
+    <i class="fas fa-flag fa-4x text-muted mb-3"></i>
+    <h4>No Challenges Available</h4>
+    <p class="text-muted">Check back later for new challenges!</p>
+</div>
+{% endif %}
+{% endblock %}

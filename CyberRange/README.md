@@ -1,4 +1,4 @@
-# Cyber Range - Cybersecurity Training Platform
+# Custom Cyber Range - Final Year Project
 
 ## Overview
 A comprehensive cyber range environment for cybersecurity training and assessment. This project provides isolated virtual environments with vulnerable systems, attack scenarios, and monitoring capabilities.
@@ -9,7 +9,6 @@ A comprehensive cyber range environment for cybersecurity training and assessmen
 - **Attack Scenarios**: Guided challenges and CTF-style exercises
 - **Monitoring Dashboard**: Real-time monitoring and logging
 - **Web Interface**: User-friendly challenge management system
-- **Interactive Learning**: Step-by-step guides and real-world scenarios
 
 ## Architecture
 ```
@@ -37,57 +36,17 @@ A comprehensive cyber range environment for cybersecurity training and assessmen
 ## Technology Stack
 - **Virtualization**: VirtualBox/VMware
 - **Backend**: Python Flask
-- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
-- **Database**: SQLite / SQLAlchemy
-- **Authentication**: Flask-Login
-- **Monitoring**: Custom dashboard with real-time metrics
-- **Networking**: Virtual networks with proper isolation
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Database**: SQLite
+- **Monitoring**: ELK Stack (Elasticsearch, Logstash, Kibana)
+- **Networking**: Virtual networks with pfSense firewall
 
 ## Getting Started
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/SuhasKoparde/Cyberrange.git
-   cd Cyberrange
-   ```
-2. Set up a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Initialize the database:
-   ```bash
-   python -c "from app import app, db; app.app_context().push(); db.create_all()"
-   python -c "from app import init_db; init_db()"
-   ```
-5. Start the application:
-   ```bash
-   python app.py
-   ```
-6. Access the application at `http://localhost:5000`
-   - Admin login: `admin` / `admin123`
-   - User login: Create an account or use demo credentials
-
-## Features in Detail
-
-### Dashboard
-- Real-time system metrics (CPU, Memory, Disk usage)
-- Challenge progress tracking
-- Virtual machine status monitoring
-
-### Challenges
-- Multiple difficulty levels
-- Detailed descriptions and hints
-- Step-by-step execution guides
-- Real-world application scenarios
-
-### Security Tools
-- Integrated security tools
-- Custom tools for vulnerability assessment
-- Attack simulation capabilities
+1. Install dependencies: `pip install -r requirements.txt`
+2. Set up virtual machines using provided configurations
+3. Configure network topology
+4. Start the web interface: `python app.py`
+5. Access the dashboard at `http://localhost:5000`
 
 ## Project Structure
 ```
@@ -110,7 +69,3 @@ CyberRange/
 
 ## License
 MIT License - Educational Use
-=======
-# Cyberrange
-CyberRange is a hands-on cybersecurity training platform offering virtual labs, CTFs, and real-world attack/defense simulations. It helps students and professionals build skills in pentesting, forensics, incident response, and network/cloud security with guided learning paths and performance tracking.
->>>>>>> 77ab104934682258b59ebecdacbdecad664dcc34
