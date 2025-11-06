@@ -96,6 +96,8 @@ graph TD
 - pip (Python package manager)
 - Virtual environment (recommended)
 
+> **For Kali Linux users**: See the [Kali Linux Setup Guide](KALI_SETUP.md) for specific instructions.
+
 ### Setup Instructions
 
 1. **Clone the repository**
