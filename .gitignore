@@ -1,12 +1,31 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
-*.class
-*.so
+*.pyo
+*.pyd
 .Python
-env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
 venv/
+env/
 ENV/
+.env
+.venv
 env.bak/
 venv.bak/
 
@@ -14,6 +33,7 @@ venv.bak/
 *.db
 *.sqlite
 *.sqlite3
+instance/
 
 # Virtual Machines
 .vagrant/
@@ -25,16 +45,20 @@ venv.bak/
 # Logs and environment files
 *.log
 logs/
-.env
-.venv
-env.bat
-venv.bat
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+.project
+.pydevproject
+.settings/
 
 # OS generated files
 .DS_Store
@@ -45,6 +69,25 @@ venv.bat
 ehthumbs.db
 Thumbs.db
 
-# Offline deployment
-/offline_deployment/
+# Project specific
+offline_deployment/
 CyberRange_VM_Package.zip
+*.bat
+*.sh
+
+# Local development
+instance/
+.webassets-cache
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.*
+!.env.example
