@@ -102,7 +102,7 @@ graph TD
 
 2. **Install required system packages**
    ```bash
-   sudo apt install -y python3-pip python3-venv git
+   sudo apt install -y python3-pip python3-venv git build-essential python3-dev libpq-dev libjpeg-dev zlib1g-dev
    ```
 
 3. **Clone the repository**
@@ -114,18 +114,43 @@ graph TD
 4. **Set up virtual environment**
    ```bash
    python3 -m venv venv
-   source venv/bin/activate
+   # On Windows:
+   .\venv\Scripts\activate
+   # On Linux/Mac:
+   # source venv/bin/activate
    ```
 
-5. **Install Python dependencies**
+5. **Upgrade pip and install Python dependencies**
    ```bash
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
-6. **Initialize the database**
+6. **Set up environment variables**
    ```bash
-   python3 -c "from app import app, db; app.app_context().push(); db.create_all()"
-   python3 -c "from app import init_db; init_db()"
+   cp .env.example .env
+   # Edit the .env file with your configuration
+   # nano .env
+   ```
+
+7. **Initialize the database**
+   ```bash
+   # For SQLite (default)
+   python -c "from app import app, db; app.app_context().push(); db.create_all()"
+   python -c "from app import init_db; init_db()"
+   
+   # For PostgreSQL (if configured in .env)
+   # python -c "from app import app, db; app.app_context().push(); db.drop_all(); db.create_all()"
+   # python -c "from app import init_db; init_db()"
+   ```
+
+8. **Start the development server**
+   ```bash
+   # For development
+   python run.py
+   
+   # For production with Gunicorn (install with: pip install gunicorn)
+   # gunicorn -w 4 -b 0.0.0.0:5000 app:app
    ```
 
 ### Running the Application
