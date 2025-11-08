@@ -2,8 +2,85 @@
 
 {% block title %}Dashboard - Cyber Range{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Fix for infinite scrolling and layout */
+    :root {
+        --dashboard-header-height: 60px;
+        --footer-height: 60px;
+    }
+    
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    .dashboard-container {
+        flex: 1 0 auto;
+        width: 100%;
+        padding: 1.5rem 0;
+        margin-top: var(--dashboard-header-height);
+    }
+    
+    .card {
+        margin-bottom: 1.5rem;
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 120px;
+        width: 100%;
+        min-height: 120px;
+    }
+    
+    /* Stats cards */
+    .stat-card {
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Ensure content doesn't overflow */
+    .card-body {
+        overflow: hidden;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem 0.5rem;
+        }
+        
+        .stat-card {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
+<!-- Main Dashboard Container -->
+<div class="dashboard-container">
+    <div class="container">
 <div class="row">
     <div class="col-12">
         <h2 class="mb-4">
@@ -14,8 +91,8 @@
 </div>
 
 <div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center stat-card h-100" style="border-left-color: #4e73df;">
             <div class="card-body">
                 <i class="fas fa-flag fa-2x text-primary mb-2"></i>
                 <h5 class="card-title">{{ challenges|length }}</h5>
@@ -24,8 +101,8 @@
         </div>
     </div>
     
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center stat-card h-100" style="border-left-color: #4e73df;">
             <div class="card-body">
                 <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
                 <h5 class="card-title">{{ completed_challenges|length }}</h5>
@@ -34,8 +111,8 @@
         </div>
     </div>
     
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center stat-card h-100" style="border-left-color: #4e73df;">
             <div class="card-body">
                 <i class="fas fa-server fa-2x text-info mb-2"></i>
                 <h5 class="card-title">{{ vm_status|length }}</h5>
@@ -44,8 +121,8 @@
         </div>
     </div>
     
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card text-center stat-card h-100" style="border-left-color: #4e73df;">
             <div class="card-body">
                 <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
                 <h5 class="card-title">
@@ -63,13 +140,12 @@
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-line"></i> System Status
+                    <i class="fas fa-chart-line text-primary me-2"></i>System Status
                 </h5>
             </div>
-            <div class="card h-100">
             <div class="card-body">
                 <div id="system-metrics">
                     <div class="row g-4">
@@ -104,10 +180,10 @@
     </div>
     
     <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-server"></i> VM Status
+                    <i class="fas fa-bolt text-warning me-2"></i>Quick Actions
                 </h5>
             </div>
             <div class="card-body">
@@ -171,6 +247,8 @@
             </div>
         </div>
     </div>
+</div>
+</div>
 </div>
 </div>
 {% endblock %}
@@ -302,8 +380,8 @@ function updateSystemMetrics() {
 
 // Initialize charts when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Only initialize if elements exist
-    if (document.getElementById('cpuChart')) {
+    // Only initialize if elements exist and page is visible
+    if (document.getElementById('cpuChart') && isPageVisible) {
         // Wait for all resources to be loaded
         window.addEventListener('load', function() {
             // Use requestAnimationFrame to ensure smooth rendering

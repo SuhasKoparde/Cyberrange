@@ -308,9 +308,10 @@ def init_db():
     """Initialize database with sample data"""
     with app.app_context():
         # Create all database tables
+        db.drop_all()
         db.create_all()
         
-        # Clear existing data to refresh challenges
+        # Clear existing data
         db.session.query(Challenge).delete()
         db.session.commit()
         
@@ -502,137 +503,13 @@ def init_db():
                 role='admin'
             )
             db.session.add(admin)
-        
+            db.session.commit()
+
         # Commit all changes
         db.session.commit()
         print("Database initialized successfully!")
 
 # Initialize database if this file is run directly
-if __name__ == '__main__':
-    with app.app_context():
-        init_db()
-    app.run(debug=True)
-                'hints': 'Start with basic Nmap scans and gradually use more advanced options. Pay attention to service versions and potential vulnerabilities.'
-            },
-            {
-                'name': 'Denial of Service (DoS) Lab',
-                'description': 'Understand and simulate various DoS/DDoS attack vectors, including application layer and network layer attacks, along with their mitigations.',
-                'how_to_execute': '1. Identify potential attack vectors in the target system\n2. Simulate different types of DoS attacks (SYN flood, HTTP flood, etc.)\n3. Monitor system resources during attacks\n4. Implement and test mitigation strategies\n5. Document the impact and effectiveness of mitigations',
-                'real_world_use': 'Understanding DoS attacks is critical for:\n- Building resilient network architectures\n- Implementing effective rate limiting and traffic filtering\n- Incident response to DDoS attacks\n- Compliance with service level agreements (SLAs)\n- Capacity planning and resource allocation',
-                'difficulty': 'Hard',
-                'category': 'Network Security',
-                'points': 450,
-                'vm_name': 'target-server',
-                'target_ip': '192.168.1.20',
-                'flag': 'CTF{dos_mitigation_success}',
-                'hints': 'Focus on different layers of the OSI model for attack vectors. Consider both network and application layer attacks.'
-            },
-            
-            # System Security Challenges
-            {
-                'name': 'Privilege Escalation',
-                'description': 'Escalate privileges from a low-level user to root on a Linux system by exploiting various system misconfigurations and vulnerabilities.',
-                'how_to_execute': '1. Enumerate the system for potential privilege escalation vectors\n2. Check for misconfigured file permissions (SUID/SGID binaries, writable files)\n3. Look for kernel vulnerabilities and outdated software\n4. Exploit identified vulnerabilities to gain root access\n5. Document the process and suggest remediation steps',
-                'real_world_use': 'Privilege escalation is essential for:\n- System hardening and security assessments\n- Identifying and fixing security misconfigurations\n- Understanding attacker techniques for blue team operations\n- Compliance with security standards (CIS Benchmarks, STIGs)\n- Security operations and incident response',
-                'difficulty': 'Hard',
-                'category': 'System Security',
-                'points': 500,
-                'vm_name': 'linux-target',
-                'target_ip': '192.168.1.30',
-                'flag': 'CTF{root_escalation_complete}',
-                'hints': 'Check for misconfigurations in sudo rules, SUID binaries, and kernel exploits. Use tools like LinPEAS for automated enumeration.'
-            },
-            
-            # Cryptography Challenges
-            {
-                'name': 'Password Cracking Techniques',
-                'description': 'Learn and practice password cracking techniques using tools like John the Ripper, Hashcat, and rainbow tables.',
-                'how_to_execute': '1. Identify the hash type (MD5, SHA-1, bcrypt, etc.)\n2. Choose the appropriate cracking tool and attack mode\n3. Use wordlists or generate custom password candidates\n4. Optimize cracking performance with rules and masks\n5. Analyze results and suggest stronger password policies',
-                'real_world_use': 'Password cracking is important for:\n- Security assessments and penetration testing\n- Password policy evaluation and improvement\n- Digital forensics and incident response\n- Security awareness training\n- Compliance with password security standards',
-                'difficulty': 'Medium',
-                'category': 'Cryptography',
-                'points': 400,
-                'vm_name': 'kali-attacker',
-                'target_ip': '192.168.1.100',
-                'flag': 'CTF{password_cracking_master}',
-                'hints': 'Try different attack modes: dictionary, hybrid, and rule-based attacks'
-            },
-            
-            # Advanced Challenges
-            {
-                'name': 'Advanced Web Exploitation',
-                'description': 'Tackle advanced web vulnerabilities including XXE (XML External Entity), SSTI (Server-Side Template Injection), and deserialization vulnerabilities that are commonly found in modern web applications.',
-                'how_to_execute': '1. Map the application and identify input points\n2. Test for XXE in XML processing endpoints\n3. Identify template injection points for SSTI\n4. Look for serialized objects that might be vulnerable to deserialization attacks\n5. Develop and execute exploits for identified vulnerabilities',
-                'real_world_use': 'Advanced web exploitation skills are crucial for:\n- Identifying complex security flaws in web applications\n- Conducting thorough penetration tests\n- Understanding modern web application attack vectors\n- Developing secure coding practices\n- Security research and bug bounty programs',
-                'difficulty': 'Hard',
-                'category': 'Web Security',
-                'points': 600,
-                'vm_name': 'vulnerable-web',
-                'target_ip': '192.168.1.10',
-                'flag': 'CTF{advanced_web_exploit}',
-                'hints': 'Look for less common injection points and edge cases. Pay attention to how the application processes different types of input.'
-            },
-            {
-                'name': 'Wireless Security Assessment',
-                'description': 'Learn to assess and exploit wireless network security, including WPA2-PSK, WPA3, and enterprise wireless networks, using tools like Aircrack-ng, Wireshark, and Hashcat.',
-                'how_to_execute': '1. Set up your wireless adapter in monitor mode\n2. Capture wireless traffic and identify target networks\n3. Capture WPA handshakes\n4. Perform offline password cracking\n5. Test for WPS vulnerabilities\n6. Document findings and suggest security improvements',
-                'real_world_use': 'Wireless security assessment is essential for:\n- Securing organizational wireless networks\n- Conducting wireless penetration tests\n- Identifying rogue access points\n- Complying with wireless security standards\n- Security research and responsible disclosure',
-                'difficulty': 'Hard',
-                'category': 'Wireless Security',
-                'points': 500,
-                'vm_name': 'kali-attacker',
-                'target_ip': '192.168.1.100',
-                'flag': 'CTF{wifi_security_expert}',
-                'hints': 'Focus on WPA2 handshake capture and offline cracking. Consider using GPU acceleration for faster password cracking.'
-            },
-            {
-                'name': 'Digital Forensics Challenge',
-                'description': 'Master digital forensics techniques by analyzing disk images, memory dumps, and network traffic to uncover hidden data, recover deleted files, and investigate security incidents.',
-                'how_to_execute': '1. Acquire disk images and memory dumps using forensic tools\n2. Analyze file systems for hidden or deleted files\n3. Examine network traffic captures for suspicious activity\n4. Recover and analyze browser history and system artifacts\n5. Document findings in a forensically sound manner\n6. Create a comprehensive incident report',
-                'real_world_use': 'Digital forensics is critical for:\n- Incident response and investigation\n- Data recovery and evidence collection\n- Legal proceedings and compliance\n- Security breach analysis\n- Malware analysis and reverse engineering',
-                'difficulty': 'Medium',
-                'category': 'Digital Forensics',
-                'points': 400,
-                'vm_name': 'kali-attacker',
-                'target_ip': '192.168.1.100',
-                'flag': 'CTF{forensics_solved}',
-                'hints': 'Look for hidden files, steganography, unusual network patterns, and timestamps. Pay attention to file signatures and headers.'
-            }
-        ]
-        
-        for challenge_data in challenges:
-            challenge = Challenge(
-                name=challenge_data['name'],
-                description=challenge_data['description'],
-                how_to_execute=challenge_data.get('how_to_execute', ''),
-                real_world_use=challenge_data.get('real_world_use', ''),
-                difficulty=challenge_data['difficulty'],
-                category=challenge_data['category'],
-                points=challenge_data['points'],
-                vm_name=challenge_data.get('vm_name', ''),
-                target_ip=challenge_data.get('target_ip', ''),
-                flag=challenge_data.get('flag', ''),
-                hints=challenge_data.get('hints', '')
-            )
-            db.session.add(challenge)
-        
-        db.session.commit()
-    
-    # Create sample VM status entries
-    if not VMStatus.query.first():
-        vms = [
-            {'name': 'vulnerable-web', 'status': 'stopped', 'ip_address': '192.168.1.10'},
-            {'name': 'target-server', 'status': 'stopped', 'ip_address': '192.168.1.20'},
-            {'name': 'linux-target', 'status': 'stopped', 'ip_address': '192.168.1.30'},
-            {'name': 'kali-attacker', 'status': 'running', 'ip_address': '192.168.1.100'}
-        ]
-        
-        for vm_data in vms:
-            vm = VMStatus(**vm_data)
-            db.session.add(vm)
-    
-    db.session.commit()
-
 if __name__ == '__main__':
     with app.app_context():
         init_db()

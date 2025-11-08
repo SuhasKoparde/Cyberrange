@@ -1,4 +1,5 @@
-{% extends "base.html" %}
+{% extends "base.html %}
+{% from 'bootstrap5/form.html' import render_field %}
 
 {% block title %}{{ challenge.name }} - Cyber Range{% endblock %}
 
@@ -12,6 +13,66 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/sql.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
 <script>hljs.highlightAll();</script>
+
+<style>
+    /* Fix scrolling and layout */
+    html, body {
+        height: 100%;
+        overflow-y: auto;
+    }
+    
+    .challenge-container {
+        min-height: calc(100vh - 200px);
+        padding-bottom: 2rem;
+    }
+    
+    .challenge-content {
+        line-height: 1.8;
+        color: #f0f0f0;
+    }
+    
+    .challenge-content h2, 
+    .challenge-content h3, 
+    .challenge-content h4 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        color: #e94560;
+    }
+    
+    .challenge-content pre {
+        border-radius: 6px;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        background: #1e1e2e !important;
+    }
+    
+    .challenge-content code {
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9em;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+    }
+    
+    .step-badge {
+        background: #e94560;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-weight: 600;
+        margin-right: 0.75rem;
+    }
+    
+    .real-world-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 4px solid #0f3460;
+    }
+    
+    .how-to-card {
+        background: rgba(233, 69, 96, 0.05);
+        border-left: 4px solid #e94560;
+    }
+</style>
 <style>
     .challenge-content {
         line-height: 1.8;
@@ -102,60 +163,78 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8" id="challenge-content">
-        <div class="card">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">
-                        <i class="fas fa-flag"></i> {{ challenge.name }}
-                    </h4>
-                    {% if progress and progress.completed %}
-                        <span class="badge bg-success fs-6">
-                            <i class="fas fa-check-circle"></i> Completed
-                        </span>
-                    {% endif %}
+<div class="container py-4 challenge-container">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0 text-light">
+                            <i class="fas fa-flag me-2"></i>{{ challenge.name }}
+                        </h3>
+                        {% if progress and progress.completed %}
+                            <span class="badge bg-success fs-6">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </span>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="mb-4">
-                    <span class="badge bg-secondary me-2">{{ challenge.category }}</span>
-                    <span class="badge bg-{% if challenge.difficulty == 'Easy' %}success{% elif challenge.difficulty == 'Medium' %}warning{% else %}danger{% endif %} me-2">
-                        {{ challenge.difficulty }}
-                    </span>
-                    <span class="badge bg-info">{{ challenge.points }} points</span>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <span class="badge bg-secondary me-2">
+                            <i class="fas fa-tag me-1"></i> {{ challenge.category }}
+                        </span>
+                        <span class="badge bg-{% if challenge.difficulty == 'Easy' %}success{% elif challenge.difficulty == 'Medium' %}warning{% else %}danger{% endif %} me-2">
+                            <i class="fas fa-{{ 'check-circle' if challenge.difficulty == 'Easy' else 'exclamation-circle' if challenge.difficulty == 'Medium' else 'exclamation-triangle' }} me-1"></i>
+                            {{ challenge.difficulty }}
+                        </span>
+                        <span class="badge bg-primary">
+                            <i class="fas fa-star me-1"></i> {{ challenge.points }} points
+                        </span>
                 </div>
                 
-                {% if challenge_content %}
-                    <div class="challenge-content">
-                        {{ challenge_content|safe }}
-                    </div>
-                {% else %}
-                    <div class="challenge-description mb-4">
-                        <h5>Description</h5>
-                        <p>{{ challenge.description }}</p>
+                    <div class="challenge-description mt-4">
+                        <h4 class="text-light mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Challenge Description
+                        </h4>
+                        <div class="p-3 mb-4 bg-dark rounded-3">
+                            {{ challenge.description|markdown|safe }}
+                        </div>
                         
                         {% if challenge.how_to_execute %}
-                            <div class="card mt-4">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="fas fa-terminal me-2"></i>How to Execute</h5>
+                            <div class="card how-to-card border-0 mb-4">
+                                <div class="card-header bg-transparent border-0">
+                                    <h4 class="mb-0 text-light">
+                                        <i class="fas fa-terminal me-2 text-danger"></i>How to Execute
+                                    </h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="how-to-execute">
-                                        {{ challenge.how_to_execute|replace('\n', '<br>')|safe }}
+                                        {% for line in challenge.how_to_execute.split('\n') %}
+                                            {% if line.strip() %}
+                                                <div class="d-flex align-items-start mb-3">
+                                                    <span class="step-badge">Step {{ loop.index }}</span>
+                                                    <div class="flex-grow-1 ms-2">
+                                                        {{ line|markdown|safe }}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
                         {% endif %}
                         
                         {% if challenge.real_world_use %}
-                            <div class="card mt-4">
-                                <div class="card-header bg-light">
-                                    <h5 class="mb-0"><i class="fas fa-globe me-2"></i>Real World Application</h5>
+                            <div class="card real-world-card border-0 mb-4">
+                                <div class="card-header bg-transparent border-0">
+                                    <h4 class="mb-0 text-light">
+                                        <i class="fas fa-globe-americas me-2 text-primary"></i>Real World Application
+                                    </h4>
                                 </div>
                                 <div class="card-body">
                                     <div class="real-world-use">
-                                        {{ challenge.real_world_use|replace('\n', '<br>')|safe }}
+                                        {{ challenge.real_world_use|markdown|safe }}
                                     </div>
                                 </div>
                             </div>
