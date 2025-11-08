@@ -306,53 +306,8 @@ def system_status():
 
 def init_db():
     """Initialize database with sample data"""
-    db.create_all()
-    
-    # Create admin user if not exists
-    if not User.query.filter_by(username='admin').first():
-        admin = User(
-            username='admin',
-            email='admin@cyberrange.local',
-            password_hash=generate_password_hash('admin123'),
-            role='admin'
-        )
-        db.session.add(admin)
-    
-    # Create sample challenges if none exist
-    if not Challenge.query.first():
-        challenges = [
-            # Web Security Challenges
-            {
-                'name': 'SQL Injection Mastery',
-                'description': 'Master SQL injection techniques from basic to advanced, including blind and time-based SQLi. This challenge covers various SQL injection vectors and their exploitation methods.',
-                'how_to_execute': '1. Identify the vulnerable parameter in the web application\n2. Test for SQL injection using basic payloads like `\' OR 1=1 --`\n3. Enumerate the database structure using UNION-based or error-based techniques\n4. Extract sensitive information from the database',
-                'real_world_use': 'SQL injection is one of the most critical web application vulnerabilities. Understanding it helps in:\n- Securing web applications against data breaches\n- Conducting penetration tests for web applications\n- Complying with security standards like OWASP Top 10\n- Preventing unauthorized data access and manipulation',
-                'difficulty': 'Hard',
-                'category': 'Web Security',
-                'points': 500,
-                'vm_name': 'vulnerable-web',
-                'target_ip': '192.168.1.10',
-                'flag': 'CTF{sql_injection_master}',
-                'hints': 'Try different SQL injection techniques and consider out-of-band methods. Look for error messages that might reveal database structure.'
-            },
-            {
-                'name': 'Brute Force Attack Lab',
-                'description': 'Learn and practice brute force attacks against various services including SSH, FTP, and web logins using tools like Hydra and Medusa.',
-                'how_to_execute': '1. Identify the target service and its authentication mechanism\n2. Prepare a wordlist of common passwords\n3. Use tools like Hydra or Medusa to perform the attack\n4. Analyze the results and identify weak credentials\n5. Mitigate the attack by implementing account lockout policies',
-                'real_world_use': 'Brute force attacks are commonly used by attackers to gain unauthorized access. Understanding them helps in:\n- Implementing strong password policies\n- Setting up account lockout mechanisms\n- Configuring rate limiting on authentication endpoints\n- Conducting security assessments of authentication systems',
-                'difficulty': 'Medium',
-                'category': 'Authentication Security',
-                'points': 350,
-                'vm_name': 'linux-target',
-                'target_ip': '192.168.1.30',
-                'flag': 'CTF{brute_force_success}',
-                'hints': 'Try different wordlists and consider username enumeration. Look for default credentials and common password patterns.'
-            },
-            {
-                'name': 'Directory and File Enumeration',
-                'description': 'Discover hidden directories, backup files, and sensitive information using tools like Gobuster, Dirb, and Dirsearch.',
-                'how_to_execute': '1. Use Gobuster with common wordlists (e.g., common.txt, directory-list-2.3-medium.txt)\n2. Look for common backup file extensions (.bak, .old, .swp)\n3. Check for sensitive files (robots.txt, .git/, .env, etc.)\n4. Analyze server responses for interesting status codes',
-                'real_world_use': 'Directory enumeration is crucial for:\n- Identifying exposed sensitive files in security assessments\n- Finding hidden endpoints in bug bounty programs\n- Understanding web application structure during penetration tests\n- Preventing information disclosure in production environments',
+    with app.app_context():
+        db.create_all()
                 'difficulty': 'Easy',
                 'category': 'Web Security',
                 'points': 200,
