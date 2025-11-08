@@ -307,28 +307,211 @@ def system_status():
 def init_db():
     """Initialize database with sample data"""
     with app.app_context():
+        # Create all database tables
         db.create_all()
+        
+        # Clear existing data to refresh challenges
+        db.session.query(Challenge).delete()
+        db.session.commit()
+        
+        # Sample challenges data
+        challenges = [
+            # Web Security Challenges
+            {
+                'name': 'SQL Injection Mastery',
+                'description': 'Master SQL injection techniques from basic to advanced, including UNION-based, boolean-based, and time-based attacks.',
+                'how_to_execute': '1. Identify input fields\n2. Test for SQL injection vulnerabilities\n3. Exploit the vulnerability to extract data\n4. Document findings and remediation steps',
+                'real_world_use': 'SQL injection is one of the most common web vulnerabilities. Understanding it is crucial for securing web applications and conducting security assessments.',
                 'difficulty': 'Easy',
                 'category': 'Web Security',
                 'points': 200,
                 'vm_name': 'vulnerable-web',
                 'target_ip': '192.168.1.10',
-                'flag': 'CTF{hidden_directories_found}',
-                'hints': 'Try different wordlists and file extensions. Pay attention to HTTP status codes (200, 301, 403, etc.) and response sizes.'
+                'flag': 'CTF{sql_injection_master}',
+                'hints': 'Try different SQL injection techniques like UNION-based, boolean-based, and time-based attacks.'
+            },
+            {
+                'name': 'XSS (Cross-Site Scripting)',
+                'description': 'Learn to exploit and prevent XSS vulnerabilities in web applications.',
+                'how_to_execute': '1. Identify input fields\n2. Test for XSS vulnerabilities\n3. Craft payloads to steal cookies\n4. Implement protection mechanisms',
+                'real_world_use': 'XSS is a common web vulnerability that can lead to account takeover and data theft.',
+                'difficulty': 'Medium',
+                'category': 'Web Security',
+                'points': 300,
+                'vm_name': 'web-app-1',
+                'target_ip': '192.168.1.11',
+                'flag': 'CTF{xss_mastery_achieved}',
+                'hints': 'Try different contexts: HTML, JavaScript, and DOM-based XSS.'
             },
             
             # Network Security Challenges
             {
                 'name': 'Network Reconnaissance',
-                'description': 'Master network scanning, host discovery, and service enumeration using Nmap and other network scanning tools.',
-                'how_to_execute': '1. Perform host discovery using ping sweeps\n2. Conduct port scanning with Nmap (TCP SYN, UDP, etc.)\n3. Identify services and their versions\n4. Map the network topology\n5. Document all findings for security assessment reports',
-                'real_world_use': 'Network reconnaissance is fundamental for:\n- Security assessments and penetration testing\n- Network inventory and documentation\n- Identifying unauthorized devices\n- Vulnerability assessment and management\n- Security monitoring and incident response',
-                'difficulty': 'Easy',
+                'description': 'Master network scanning and host discovery techniques using tools like Nmap, Masscan, and custom scripts.',
+                'how_to_execute': '1. Perform host discovery\n2. Conduct port scanning\n3. Identify services and versions\n4. Document the network map',
+                'real_world_use': 'Network reconnaissance is the first step in penetration testing and security assessments, helping to identify potential attack surfaces.',
+                'difficulty': 'Medium',
                 'category': 'Network Security',
-                'points': 250,
-                'vm_name': 'target-server',
+                'points': 300,
+                'vm_name': 'network-target',
                 'target_ip': '192.168.1.20',
-                'flag': 'CTF{network_recon_complete}',
+                'flag': 'CTF{network_scan_complete}',
+                'hints': 'Start with host discovery, then move to port scanning. Use version detection to identify running services.'
+            },
+            {
+                'name': 'Man-in-the-Middle Attack',
+                'description': 'Learn to perform and defend against MITM attacks using ARP spoofing and SSL stripping.',
+                'how_to_execute': '1. Set up network interception\n2. Perform ARP spoofing\n3. Analyze captured traffic\n4. Implement countermeasures',
+                'real_world_use': 'Understanding MITM attacks is crucial for securing network communications and implementing proper encryption.',
+                'difficulty': 'Hard',
+                'category': 'Network Security',
+                'points': 450,
+                'vm_name': 'network-target-2',
+                'target_ip': '192.168.1.21',
+                'flag': 'CTF{mitm_prevented}',
+                'hints': 'Look for unencrypted traffic and weak encryption protocols.'
+            },
+            
+            # System Security Challenges
+            {
+                'name': 'Privilege Escalation',
+                'description': 'Learn to escalate privileges from a standard user to root/administrator on Linux and Windows systems.',
+                'how_to_execute': '1. Enumerate system information\n2. Check for misconfigurations\n3. Exploit vulnerabilities\n4. Document the escalation path',
+                'real_world_use': 'Privilege escalation is a critical skill for penetration testers and system administrators to secure systems against unauthorized access.',
+                'difficulty': 'Hard',
+                'category': 'System Security',
+                'points': 500,
+                'vm_name': 'linux-target',
+                'target_ip': '192.168.1.30',
+                'flag': 'CTF{root_obtained}',
+                'hints': 'Check for SUID binaries, kernel vulnerabilities, and misconfigured permissions.'
+            },
+            {
+                'name': 'Windows Privilege Escalation',
+                'description': 'Learn Windows privilege escalation techniques and common misconfigurations.',
+                'how_to_execute': '1. Enumerate Windows system information\n2. Check for vulnerable services\n3. Exploit misconfigurations\n4. Gain SYSTEM privileges',
+                'real_world_use': 'Windows privilege escalation is essential for penetration testers and security professionals assessing Windows environments.',
+                'difficulty': 'Hard',
+                'category': 'System Security',
+                'points': 500,
+                'vm_name': 'windows-target',
+                'target_ip': '192.168.1.31',
+                'flag': 'CTF{admin_escalated}',
+                'hints': 'Check for unquoted service paths, vulnerable drivers, and weak service permissions.'
+            },
+            
+            # Digital Forensics Challenges
+            {
+                'name': 'Memory Forensics',
+                'description': 'Analyze memory dumps to find evidence of malicious activity and extract artifacts.',
+                'how_to_execute': '1. Acquire memory dump\n2. Analyze processes and network connections\n3. Extract suspicious files\n4. Document findings',
+                'real_world_use': 'Memory forensics is crucial for incident response and malware analysis.',
+                'difficulty': 'Advanced',
+                'category': 'Digital Forensics',
+                'points': 600,
+                'vm_name': 'forensics-vm',
+                'target_ip': '192.168.1.40',
+                'flag': 'CTF{memory_analyzed}',
+                'hints': 'Look for hidden processes, injected code, and unusual network connections.'
+            },
+            
+            # Reverse Engineering Challenges
+            {
+                'name': 'Malware Analysis',
+                'description': 'Analyze and reverse engineer a piece of malware to understand its behavior.',
+                'how_to_execute': '1. Perform static analysis\n2. Set up a safe analysis environment\n3. Conduct dynamic analysis\n4. Document the malware\'s capabilities',
+                'real_world_use': 'Malware analysis is essential for developing detection signatures and understanding attack techniques.',
+                'difficulty': 'Expert',
+                'category': 'Reverse Engineering',
+                'points': 700,
+                'vm_name': 'malware-lab',
+                'target_ip': '192.168.1.50',
+                'flag': 'CTF{malware_reversed}',
+                'hints': 'Look for anti-analysis techniques and obfuscation methods.'
+            },
+            
+            # Cryptography Challenges
+            {
+                'name': 'Cryptographic Failures',
+                'description': 'Exploit common cryptographic weaknesses and implementation flaws.',
+                'how_to_execute': '1. Analyze the encryption scheme\n2. Identify weaknesses\n3. Develop an exploit\n4. Decrypt the flag',
+                'real_world_use': 'Understanding cryptographic failures helps in implementing secure encryption and hashing.',
+                'difficulty': 'Hard',
+                'category': 'Cryptography',
+                'points': 500,
+                'vm_name': 'crypto-challenge',
+                'target_ip': '192.168.1.60',
+                'flag': 'CTF{crypto_cracked}',
+                'hints': 'Look for weak random number generation and predictable keys.'
+            },
+            
+            # Mobile Security Challenges
+            {
+                'name': 'Android App Reverse Engineering',
+                'description': 'Reverse engineer an Android application to find and exploit vulnerabilities.',
+                'how_to_execute': '1. Decompile the APK\n2. Analyze the code\n3. Identify vulnerabilities\n4. Exploit them to get the flag',
+                'real_world_use': 'Mobile app security is crucial as mobile devices store sensitive personal and corporate data.',
+                'difficulty': 'Advanced',
+                'category': 'Mobile Security',
+                'points': 600,
+                'vm_name': 'android-lab',
+                'target_ip': '192.168.1.70',
+                'flag': 'CTF{android_hacked}',
+                'hints': 'Check for hardcoded credentials and insecure data storage.'
+            },
+            
+            # Cloud Security Challenges
+            {
+                'name': 'AWS Security Assessment',
+                'description': 'Identify and exploit common misconfigurations in AWS environments.',
+                'how_to_execute': '1. Enumerate AWS resources\n2. Check for misconfigurations\n3. Exploit weaknesses\n4. Document findings',
+                'real_world_use': 'Cloud security is critical as more organizations migrate to cloud platforms.',
+                'difficulty': 'Advanced',
+                'category': 'Cloud Security',
+                'points': 650,
+                'vm_name': 'cloud-env',
+                'target_ip': '192.168.1.80',
+                'flag': 'CTF{cloud_breach}',
+                'hints': 'Check for overly permissive IAM policies and exposed storage buckets.'
+            }
+        ]
+        
+        # Add challenges to database
+        for challenge_data in challenges:
+            challenge = Challenge(
+                name=challenge_data['name'],
+                description=challenge_data['description'],
+                how_to_execute=challenge_data['how_to_execute'],
+                real_world_use=challenge_data['real_world_use'],
+                difficulty=challenge_data['difficulty'],
+                category=challenge_data['category'],
+                points=challenge_data['points'],
+                vm_name=challenge_data['vm_name'],
+                target_ip=challenge_data['target_ip'],
+                flag=challenge_data['flag'],
+                hints=challenge_data['hints']
+            )
+            db.session.add(challenge)
+        
+        # Create default admin user if not exists
+        if not User.query.filter_by(username='admin').first():
+            admin = User(
+                username='admin',
+                email='admin@cyberrange.local',
+                password_hash=generate_password_hash('admin123'),
+                role='admin'
+            )
+            db.session.add(admin)
+        
+        # Commit all changes
+        db.session.commit()
+        print("Database initialized successfully!")
+
+# Initialize database if this file is run directly
+if __name__ == '__main__':
+    with app.app_context():
+        init_db()
+    app.run(debug=True)
                 'hints': 'Start with basic Nmap scans and gradually use more advanced options. Pay attention to service versions and potential vulnerabilities.'
             },
             {
