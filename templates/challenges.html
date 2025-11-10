@@ -2,6 +2,87 @@
 
 {% block title %}Challenges - Cyber Range{% endblock %}
 
+{% block head %}
+<style>
+    /* Custom styles for challenges page */
+    .challenge-card {
+        transition: transform 0.2s ease-in-out;
+        margin-bottom: 1.5rem;
+    }
+    
+    .challenge-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .card-text {
+        flex-grow: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+    }
+    
+    .challenge-meta {
+        margin-top: auto;
+        padding-top: 1rem;
+    }
+    
+    /* Custom scrollbar for challenge content */
+    .challenge-content {
+        max-height: 70vh;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    
+    /* Dark mode scrollbar */
+    .dark-mode ::-webkit-scrollbar-track {
+        background: #2d3748;
+    }
+    
+    .dark-mode ::-webkit-scrollbar-thumb {
+        background: #4a5568;
+    }
+    
+    .dark-mode ::-webkit-scrollbar-thumb:hover {
+        background: #718096;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
@@ -81,7 +162,7 @@
     </div>
 </div>
 
-<div class="tab-content" id="challengeTabsContent">
+<div class="tab-content challenge-content" id="challengeTabsContent">
     <div class="tab-pane fade show active" id="all" role="tabpanel">
         <div class="row g-4">
             {% for challenge in challenges %}
@@ -104,7 +185,26 @@
                             <span class="badge bg-secondary">{{ challenge.category }}</span>
                         </div>
                         
-                        <p class="card-text text-muted">{{ challenge.description[:150] }}{% if challenge.description|length > 150 %}...{% endif %}</p>
+                        <div class="challenge-description mb-3">
+    <h6 class="text-primary">Description</h6>
+    <p class="card-text text-muted">{{ challenge.description }}</p>
+</div>
+
+{% if challenge.how_to_execute %}
+<div class="challenge-steps mb-3">
+    <h6 class="text-primary">How to Execute</h6>
+    <div class="bg-light p-3 rounded">
+        {{ challenge.how_to_execute|replace('\n', '<br>')|safe }}
+    </div>
+</div>
+{% endif %}
+
+{% if challenge.real_world_use %}
+<div class="challenge-context mb-3">
+    <h6 class="text-primary">Real World Use</h6>
+    <p class="card-text text-muted">{{ challenge.real_world_use }}</p>
+</div>
+{% endif %}
                         
                         {% if challenge.target_ip %}
                         <div class="mb-3">
@@ -197,22 +297,15 @@ function filterChallenges() {
     });
 }
 
-// Initialize filters
-$(document).ready(function() {
-    // Filter change events
-    $('#categoryFilter, #difficultyFilter, #statusFilter').change(filterChallenges);
+// Function to populate category tabs with challenges
+function populateCategoryTabs() {
+    const categories = {};
     
-    // Categorize challenges for tabs
+    // Group challenges by category
     $('.challenge-card').each(function() {
         const category = $(this).data('category');
-        const cardHtml = $(this).html();
-        
-        if (category.includes('web')) {
-            $('.web-challenges').append(`<div class="col-md-6 col-lg-4">${cardHtml}</div>`);
-        } else if (category.includes('network')) {
-            $('.network-challenges').append(`<div class="col-md-6 col-lg-4">${cardHtml}</div>`);
-        } else if (category.includes('crypto')) {
-            $('.crypto-challenges').append(`<div class="col-md-6 col-lg-4">${cardHtml}</div>`);
+        if (!categories[category]) {
+            categories[category] = [];
         }
     });
     
