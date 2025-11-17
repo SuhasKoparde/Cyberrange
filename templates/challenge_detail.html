@@ -107,6 +107,54 @@
         color: #b0b0b0;
         font-style: italic;
     }
+
+    /* Section specific styling */
+    .how-to-card {
+        background: linear-gradient(135deg, rgba(59, 89, 152, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+        border: 1px solid rgba(59, 89, 152, 0.2);
+    }
+
+    .real-world-card {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+        border: 1px solid rgba(40, 167, 69, 0.2);
+    }
+
+    .commands-card {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+        border: 1px solid rgba(255, 193, 7, 0.2);
+    }
+
+    .tools-card {
+        background: linear-gradient(135deg, rgba(23, 162, 184, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+        border: 1px solid rgba(23, 162, 184, 0.2);
+    }
+
+    .mistakes-card {
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(233, 69, 96, 0.05) 100%);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
+    .tools-list ul li {
+        background: #1e1e2e;
+        border: 1px solid #495057;
+        margin-bottom: 0.5rem;
+        padding: 1rem;
+        border-radius: 4px;
+    }
+
+    .accordion-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: rgba(233, 69, 96, 0.2);
+        color: #e94560;
+    }
+
+    .accordion-button:focus {
+        border-color: rgba(233, 69, 96, 0.5);
+        box-shadow: 0 0 0 0.25rem rgba(233, 69, 96, 0.25);
+    }
     
     /* Code block styling */
     .challenge-content pre code {
@@ -205,12 +253,15 @@
                         </div>
 
                         {% if challenge.how_to_execute %}
-                        <div class="challenge-section how-to-card p-3 mb-4 rounded-3">
-                            <h4 class="d-flex align-items-center text-primary">
-                                <i class="fas fa-terminal me-2"></i> How to Execute
+                        <div class="challenge-section how-to-card p-4 mb-4 rounded-3 border-start border-primary border-5">
+                            <h4 class="d-flex align-items-center text-primary mb-3">
+                                <i class="fas fa-terminal me-2"></i> Step-by-Step Execution Guide
                             </h4>
-                            <div class="mt-2">
+                            <div class="mt-2 bg-dark p-3 rounded">
                                 {{ challenge.how_to_execute|render_markdown|safe }}
+                            </div>
+                            <div class="mt-3 alert alert-info">
+                                <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Follow each step carefully. Copy commands using the copy button on the right.
                             </div>
                         </div>
                         {% else %}
@@ -219,26 +270,195 @@
                         {% endif %}
 
                         {% if challenge.real_world_use %}
-                        <div class="challenge-section real-world-card p-3 mb-4 rounded-3">
-                            <h4 class="d-flex align-items-center text-primary">
-                                <i class="fas fa-globe-americas me-2"></i> Real World Application
+                        <div class="challenge-section real-world-card p-4 mb-4 rounded-3 border-start border-success border-5">
+                            <h4 class="d-flex align-items-center text-success">
+                                <i class="fas fa-globe-americas me-2"></i> Real World Application & Impact
                             </h4>
-                            <div class="mt-2">
+                            <div class="mt-3 alert alert-info">
+                                <i class="fas fa-book"></i> <strong>Why Learn This?</strong> Understanding real-world implications helps you appreciate security concepts.
+                            </div>
+                            <div class="mt-2 p-3 bg-dark rounded">
                                 {{ challenge.real_world_use|render_markdown|safe }}
                             </div>
                         </div>
                         {% endif %}
 
-                        {% if challenge.hints %}
-                        <div class="challenge-section bg-dark p-3 mb-4 rounded-3">
-                            <h4 class="d-flex align-items-center text-warning">
-                                <i class="fas fa-lightbulb me-2"></i> Hints
+                        <!-- Key Commands Section -->
+                        <div class="challenge-section commands-card p-4 mb-4 rounded-3 border-start border-warning border-5">
+                            <h4 class="d-flex align-items-center text-warning mb-3">
+                                <i class="fas fa-code me-2"></i> Key Commands Reference
                             </h4>
-                            <div class="mt-2 text-muted">
-                                {{ challenge.hints|render_markdown|safe }}
+                            <p class="text-muted mb-3">Copy and paste these commands into your terminal as needed:</p>
+                            <div class="bg-dark p-3 rounded">
+                                <pre><code class="language-bash">
+# Common commands for this challenge:
+# Follow the step-by-step guide above for proper usage
+
+# Example basic command:
+# command_name [options] [target]
+
+# Always refer to the detailed steps for context and proper parameters
+                                </code></pre>
+                            </div>
+                        </div>
+
+                        <!-- Tools Section -->
+                        <div class="challenge-section tools-card p-4 mb-4 rounded-3 border-start border-info border-5">
+                            <h4 class="d-flex align-items-center text-info mb-3">
+                                <i class="fas fa-toolbox me-2"></i> Tools You'll Use
+                            </h4>
+                            <p class="text-muted mb-3">These are the cybersecurity tools needed for this challenge:</p>
+                            <div class="tools-list">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-info-circle"></i> <strong>Installation Guide:</strong><br>
+                                    Most tools come pre-installed on Kali Linux. For Windows/Mac, check tool documentation.
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item bg-dark">
+                                        <strong>Option 1: Pre-built Lists</strong><br>
+                                        Common tools include: Burp Suite, Metasploit, Wireshark, GDB, Hydra
+                                    </li>
+                                    <li class="list-group-item bg-dark">
+                                        <strong>Option 2: Installation (Linux)</strong><br>
+                                        <code class="bg-secondary p-2 rounded">sudo apt update && sudo apt install -y toolname</code>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Common Mistakes Section -->
+                        <div class="challenge-section mistakes-card p-4 mb-4 rounded-3 border-start border-danger border-5">
+                            <h4 class="d-flex align-items-center text-danger mb-3">
+                                <i class="fas fa-exclamation-circle me-2"></i> Common Mistakes & Troubleshooting
+                            </h4>
+                            <div class="accordion" id="mistakesAccordion">
+                                <div class="accordion-item bg-dark border-secondary">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#mistake1">
+                                            ❌ Command Not Found Error
+                                        </button>
+                                    </h2>
+                                    <div id="mistake1" class="accordion-collapse collapse" data-bs-parent="#mistakesAccordion">
+                                        <div class="accordion-body bg-dark text-light">
+                                            <strong>Problem:</strong> Tool/command is not installed<br>
+                                            <strong>Solution:</strong> Install the missing tool using apt (Linux) or brew (Mac)
+                                            <pre><code class="language-bash">sudo apt install tool-name</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item bg-dark border-secondary">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button bg-dark text-light collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mistake2">
+                                            ❌ Permission Denied Error
+                                        </button>
+                                    </h2>
+                                    <div id="mistake2" class="accordion-collapse collapse" data-bs-parent="#mistakesAccordion">
+                                        <div class="accordion-body bg-dark text-light">
+                                            <strong>Problem:</strong> You don't have permission to run the command<br>
+                                            <strong>Solution:</strong> Use sudo to run with elevated privileges
+                                            <pre><code class="language-bash">sudo command-name</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item bg-dark border-secondary">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button bg-dark text-light collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mistake3">
+                                            ❌ Connection Refused
+                                        </button>
+                                    </h2>
+                                    <div id="mistake3" class="accordion-collapse collapse" data-bs-parent="#mistakesAccordion">
+                                        <div class="accordion-body bg-dark text-light">
+                                            <strong>Problem:</strong> Cannot connect to target<br>
+                                            <strong>Solution:</strong> Check if VM is running and correct IP is used
+                                            <pre><code class="language-bash">ping target-ip
+nmap -sn target-ip</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if challenge.hints %}
+                        <div class="challenge-section bg-dark p-4 mb-4 rounded-3 border-start border-warning border-5">
+                            <h4 class="d-flex align-items-center text-warning mb-3">
+                                <i class="fas fa-lightbulb me-2"></i> 💡 Helpful Hints (Click to Expand)
+                            </h4>
+                            <div class="accordion" id="hintsAccordion">
+                                <div class="accordion-item bg-dark border-warning">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button bg-dark text-warning collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#hintsContent">
+                                            <i class="fas fa-chevron-down me-2"></i>Show Hints
+                                        </button>
+                                    </h2>
+                                    <div id="hintsContent" class="accordion-collapse collapse" data-bs-parent="#hintsAccordion">
+                                        <div class="accordion-body bg-secondary text-light p-3">
+                                            {{ challenge.hints|render_markdown|safe }}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         {% endif %}
+
+                        <!-- Learning Resources Section -->
+                        <div class="challenge-section p-4 mb-4 rounded-3 border-start border-info border-5">
+                            <h4 class="d-flex align-items-center text-info mb-3">
+                                <i class="fas fa-graduation-cap me-2"></i> 📚 Learning Resources
+                            </h4>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="card bg-dark border-secondary h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">📖 Documentation</h6>
+                                            <ul class="small text-muted">
+                                                <li>Official tool documentation</li>
+                                                <li>Man pages (man toolname)</li>
+                                                <li>Tool help (toolname --help)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-dark border-secondary h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">🎓 Online Courses</h6>
+                                            <ul class="small text-muted">
+                                                <li>TryHackMe rooms</li>
+                                                <li>HackTheBox tutorials</li>
+                                                <li>YouTube security channels</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-dark border-secondary h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">🔍 Practice</h6>
+                                            <ul class="small text-muted">
+                                                <li>OWASP Top 10 guide</li>
+                                                <li>CWE database</li>
+                                                <li>Vulnerable apps (DVWA)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-dark border-secondary h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">💬 Community</h6>
+                                            <ul class="small text-muted">
+                                                <li>Security forums</li>
+                                                <li>Discord/Slack communities</li>
+                                                <li>CTF competitions</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mt-3 mb-0">
+                                <i class="fas fa-info-circle"></i> <strong>Pro Tip:</strong> Start with simpler challenges and gradually move to harder ones. Each challenge teaches fundamental cybersecurity concepts!
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -276,13 +496,32 @@
             <div class="sticky-top" style="top: 20px;">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h6 class="mb-0"><i class="fas fa-list-ul me-2"></i>Table of Contents</h6>
+                        <h6 class="mb-0"><i class="fas fa-list-ul me-2"></i>Quick Navigation</h6>
                     </div>
                     <div class="card-body py-2" id="toc">
                         <!-- Table of contents will be generated by JavaScript -->
                     </div>
                 </div>
-                <div class="card">
+
+                <div class="card mb-4">
+                    <div class="card-header bg-primary">
+                        <h6 class="mb-0 text-white">
+                            <i class="fas fa-video"></i> How This Works
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ol class="ps-3 small">
+                            <li class="mb-2"><strong>Read</strong> the challenge description</li>
+                            <li class="mb-2"><strong>Follow</strong> step-by-step execution guide</li>
+                            <li class="mb-2"><strong>Copy</strong> commands from examples</li>
+                            <li class="mb-2"><strong>Execute</strong> on target system</li>
+                            <li class="mb-2"><strong>Use</strong> hints if stuck</li>
+                            <li class="mb-2"><strong>Submit</strong> the flag when done</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="fas fa-info-circle"></i> Challenge Info
@@ -296,20 +535,27 @@
                         
                         <div class="mb-3">
                             <strong>Difficulty:</strong><br>
-                            <span class="difficulty-{{ challenge.difficulty.lower() }}">
+                            <span class="difficulty-{{ challenge.difficulty.lower() }} badge bg-{{ 'success' if challenge.difficulty == 'Easy' else 'warning' if challenge.difficulty == 'Medium' else 'danger' }}">
                                 {{ challenge.difficulty|e }}
                             </span>
                         </div>
                         
                         <div class="mb-3">
                             <strong>Points:</strong><br>
-                            <span class="text-muted">{{ challenge.points|e }}</span>
+                            <span class="badge bg-primary">{{ challenge.points|e }} XP</span>
                         </div>
                         
                         {% if challenge.vm_name %}
                         <div class="mb-3">
-                            <strong>VM:</strong><br>
+                            <strong>Target VM:</strong><br>
                             <span class="text-muted">{{ challenge.vm_name|e }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if challenge.target_ip %}
+                        <div class="mb-3">
+                            <strong>IP Address:</strong><br>
+                            <code class="bg-dark p-1 rounded">{{ challenge.target_ip|e }}</code>
                         </div>
                         {% endif %}
                         
@@ -321,10 +567,40 @@
                         
                         {% if progress.completed %}
                         <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> Completed on {{ progress.completed_at.strftime('%Y-%m-%d') }}
+                            <i class="fas fa-check-circle"></i> Completed on <br><small>{{ progress.completed_at.strftime('%Y-%m-%d') }}</small>
                         </div>
                         {% endif %}
                         {% endif %}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-warning">
+                        <h6 class="mb-0 text-dark">
+                            <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+                        </h6>
+                    </div>
+                    <div class="card-body small">
+                        <table class="table table-sm table-dark">
+                            <tbody>
+                                <tr>
+                                    <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
+                                    <td class="text-muted">Copy code</td>
+                                </tr>
+                                <tr>
+                                    <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
+                                    <td class="text-muted">Paste in terminal</td>
+                                </tr>
+                                <tr>
+                                    <td><kbd>Ctrl</kbd>+<kbd>L</kbd></td>
+                                    <td class="text-muted">Clear terminal</td>
+                                </tr>
+                                <tr>
+                                    <td><kbd>Up Arrow</kbd></td>
+                                    <td class="text-muted">Previous command</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
