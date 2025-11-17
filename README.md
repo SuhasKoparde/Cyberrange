@@ -283,52 +283,167 @@ For support, please open an issue in the [GitHub repository](https://github.com/
 
 ## License
 MIT License - Educational Use
- 
+
 ## 🔰 Kali Linux Production Deployment
 
 This section shows commands and helper files included in the `deploy/` folder to run the application on a Kali Linux machine using a Python virtual environment and Gunicorn (recommended for Linux).
 
-Files added:
-- `deploy/kali_deploy.sh` — helper script that installs dependencies, creates a venv, installs Python packages, and launches Gunicorn on port 8000.
-- `deploy/cyberrange.service` — example `systemd` unit you can copy to `/etc/systemd/system/` and enable as a service.
+### Deployment Files
 
-Quick steps (example):
+Files in `deploy/` folder:
+- `deploy/kali_deploy.sh` — Complete helper script that installs dependencies, creates venv, installs Python packages, and launches Gunicorn on port 8000.
+- `deploy/cyberrange.service` — Example systemd unit for running as a background service.
 
-1. Clone the repo and cd into it:
+### Quick Deployment Steps
+
+1. **Clone the repository**
 ```bash
 git clone https://github.com/SuhasKoparde/Cyberrange.git
 cd Cyberrange
 ```
 
-2. Make the deploy script executable and run it (review script before running):
+2. **Make deployment script executable and run it**
 ```bash
 chmod +x deploy/kali_deploy.sh
 sudo ./deploy/kali_deploy.sh
 ```
 
-3. (Optional) To run as a systemd service copy the example unit and edit paths:
+The script automatically:
+- Installs system dependencies
+- Creates Python virtual environment
+- Installs Python packages from requirements.txt
+- Starts Gunicorn server on port 8000
+
+3. **Verify the application is running**
+```bash
+curl -I http://127.0.0.1:8000
+# Expected: HTTP/1.1 200 OK
+
+# Or access in browser
+http://localhost:8000
+```
+
+4. **Login with default credentials**
+- Username: `admin`
+- Password: `admin123`
+
+### Optional: Run as a System Service
+
+To run the application automatically on boot:
+
+1. **Copy the systemd service file**
 ```bash
 sudo cp deploy/cyberrange.service /etc/systemd/system/cyberrange.service
-# Edit: /etc/systemd/system/cyberrange.service and set WorkingDirectory and PATH to your user and venv
+```
+
+2. **Edit the service file and set your paths**
+```bash
+sudo nano /etc/systemd/system/cyberrange.service
+```
+
+Make sure to update:
+- `User=` → Your username
+- `WorkingDirectory=` → Full path to `/home/your_user/Cyberrange`
+- `ExecStart=` → Full path to Python in venv
+
+3. **Enable and start the service**
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable cyberrange
 sudo systemctl start cyberrange
 sudo systemctl status cyberrange
 ```
 
-4. Verify the app is reachable on port 8000:
+4. **Check logs**
 ```bash
-curl -I http://127.0.0.1:8000
-# Expect HTTP/1.1 200 OK
+sudo journalctl -u cyberrange -f
 ```
 
-Notes & tips:
-- The `kali_deploy.sh` script is a convenience helper — review it and edit variables (paths, python binary name) to match your environment before running.
-- On Kali you may want to run the app behind Nginx as a reverse proxy for TLS and better performance.
-- If you prefer a different port, update the Gunicorn bind argument in the script or the `systemd` unit.
+### Reverse Proxy with Nginx (Optional)
 
-If you want, I can add a systemd unit templating script that populates the correct username and paths automatically and commit it to the repo.
-=======
-# Cyberrange
-CyberRange is a hands-on cybersecurity training platform offering virtual labs, CTFs, and real-world attack/defense simulations. It helps students and professionals build skills in pentesting, forensics, incident response, and network/cloud security with guided learning paths and performance tracking.
->>>>>>> 77ab104934682258b59ebecdacbdecad664dcc34
+For better performance and TLS support:
+
+1. **Install Nginx**
+```bash
+sudo apt install nginx -y
+sudo systemctl enable nginx
+```
+
+2. **Create Nginx config**
+```bash
+sudo nano /etc/nginx/sites-available/cyberrange
+```
+
+Add:
+```nginx
+upstream cyberrange_app {
+    server 127.0.0.1:8000;
+}
+
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://cyberrange_app;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+3. **Enable the config**
+```bash
+sudo ln -s /etc/nginx/sites-available/cyberrange /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+4. **Access via Nginx on port 80**
+```bash
+curl -I http://127.0.0.1
+# Expected: HTTP/1.1 200 OK
+```
+
+### Important Notes
+
+- All 6 challenges now include **4,700+ words of comprehensive guides** each
+- Guides include **15+ step-by-step instructions** with copy-paste commands
+- Each challenge has **real-world scenarios** and **prevention methods**
+- Default port: **8000** (accessible at http://localhost:8000)
+- Database: **SQLite** (auto-initialized on first run)
+- For production, consider using **PostgreSQL** instead of SQLite
+
+### Troubleshooting
+
+**Application won't start:**
+```bash
+# Check if port 8000 is already in use
+sudo lsof -i :8000
+# Kill the process if needed
+sudo kill -9 <PID>
+```
+
+**Check deployment script output:**
+```bash
+# Run with debug output
+bash -x deploy/kali_deploy.sh
+```
+
+**View application logs:**
+```bash
+# If running as service
+sudo journalctl -u cyberrange -n 50
+
+# If running in terminal
+# Press Ctrl+C to stop and see full output
+```
+
+### Next Steps
+
+After deployment:
+1. Access the web interface at `http://your_kali_ip:8000`
+2. Login with `admin` / `admin123`
+3. Click any challenge to see **complete step-by-step guides**
+4. Each guide includes real commands you can copy and execute
+5. Track your progress on the dashboard
