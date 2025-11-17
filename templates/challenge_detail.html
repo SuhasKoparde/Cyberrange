@@ -213,6 +213,9 @@
                                 {{ challenge.how_to_execute|render_markdown|safe }}
                             </div>
                         </div>
+                        {% else %}
+                        <!-- DEBUG: how_to_execute is empty or None -->
+                        <div class="alert alert-warning">Challenge.how_to_execute is empty</div>
                         {% endif %}
 
                         {% if challenge.real_world_use %}
