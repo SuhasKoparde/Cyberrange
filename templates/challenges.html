@@ -164,9 +164,9 @@
 
 <div class="tab-content challenge-content" id="challengeTabsContent">
     <div class="tab-pane fade show active" id="all" role="tabpanel">
-        <div class="row g-4">
+        <div class="row g-4 challenges-container">
             {% for challenge in challenges %}
-            <div class="col-md-6 col-lg-4 challenge-card" 
+            <div class="col-md-6 col-lg-4 challenge-card mb-4" 
                  data-category="{{ challenge.category|lower }}" 
                  data-difficulty="{{ challenge.difficulty }}"
                  data-status="{% if challenge.id in progress_dict and progress_dict[challenge.id].completed %}completed{% else %}incomplete{% endif %}">
@@ -185,26 +185,10 @@
                             <span class="badge bg-secondary">{{ challenge.category }}</span>
                         </div>
                         
-                        <div class="challenge-description mb-3">
-    <h6 class="text-primary">Description</h6>
-    <p class="card-text text-muted">{{ challenge.description }}</p>
-</div>
-
-{% if challenge.how_to_execute %}
-<div class="challenge-steps mb-3">
-    <h6 class="text-primary">How to Execute</h6>
-    <div class="bg-light p-3 rounded">
-        {{ challenge.how_to_execute|replace('\n', '<br>')|safe }}
-    </div>
-</div>
-{% endif %}
-
-{% if challenge.real_world_use %}
-<div class="challenge-context mb-3">
-    <h6 class="text-primary">Real World Use</h6>
-    <p class="card-text text-muted">{{ challenge.real_world_use }}</p>
-</div>
-{% endif %}
+                        {# Compact listing: don't show description/how-to/real-world on the list page. See challenge detail for full info. #}
+                        <div class="mb-3">
+                            <p class="card-text text-muted small mb-0">Open the challenge to view full details and execution steps.</p>
+                        </div>
                         
                         {% if challenge.target_ip %}
                         <div class="mb-3">
@@ -272,56 +256,116 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/infinite-scroll@4/dist/infinite-scroll.pkgd.min.js"></script>
 <script>
-// Filter challenges based on selected filters
-function filterChallenges() {
-    const category = $('#categoryFilter').val().toLowerCase();
-    const difficulty = $('#difficultyFilter').val();
-    const status = $('#statusFilter').val();
-    
-    $('.challenge-card').each(function() {
-        const card = $(this);
-        const cardCategory = card.data('category');
-        const cardDifficulty = card.data('difficulty');
-        const cardStatus = card.data('status');
-        
-        const categoryMatch = !category || cardCategory.includes(category);
-        const difficultyMatch = !difficulty || cardDifficulty === difficulty;
-        const statusMatch = status === 'all' || cardStatus === status;
-        
-        if (categoryMatch && difficultyMatch && statusMatch) {
-            card.show();
-        } else {
-            card.hide();
-        }
+// Initialize infinite scroll
+$(document).ready(function() {
+    // Initialize infinite scroll on the challenges container
+    $('.challenges-container').infiniteScroll({
+        path: '.pagination__next',
+        append: '.challenge-card',
+        status: '.page-load-status',
+        hideNav: '.pagination',
+        history: false
     });
-}
 
-// Function to populate category tabs with challenges
-function populateCategoryTabs() {
-    const categories = {};
-    
-    // Group challenges by category
-    $('.challenge-card').each(function() {
-        const category = $(this).data('category');
-        if (!categories[category]) {
-            categories[category] = [];
-        }
-    });
-    
-    // Show message if no challenges in a category
-    $('.tab-pane').each(function() {
-        const tabId = $(this).attr('id');
-        if (tabId !== 'all' && $(this).find('.col-md-6').length === 0) {
-            $(this).html(`
-                <div class="text-center py-5 my-5">
-                    <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
-                    <h4>No Challenges Available</h4>
-                    <p class="text-muted">Check back soon for new ${tabId} challenges!</p>
-                </div>
-            `);
-        }
-    });
+    // Filter challenges based on selected filters
+    function filterChallenges() {
+        const category = $('#categoryFilter').val().toLowerCase();
+        const difficulty = $('#difficultyFilter').val();
+        const status = $('#statusFilter').val();
+        
+        $('.challenge-card').each(function() {
+            const card = $(this);
+            const cardCategory = card.data('category');
+            const cardDifficulty = card.data('difficulty');
+            const cardStatus = card.data('status');
+            
+            const categoryMatch = !category || cardCategory.includes(category);
+            const difficultyMatch = !difficulty || cardDifficulty === difficulty;
+            const statusMatch = status === 'all' || cardStatus === status;
+            
+            if (categoryMatch && difficultyMatch && statusMatch) {
+                card.show();
+            } else {
+                card.hide();
+            }
+        });
+    }
+
+    // Function to populate category tabs with challenges
+    function populateCategoryTabs() {
+        const categories = {};
+        
+        // Group challenges by category
+        $('.challenge-card').each(function() {
+            const category = $(this).data('category');
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+        });
+        
+        // Show message if no challenges in a category
+        $('.tab-pane').each(function() {
+            const tabId = $(this).attr('id');
+            if (tabId !== 'all' && $(this).find('.col-md-6').length === 0) {
+                $(this).html(`
+                    <div class="text-center py-5 my-5">
+                        <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                        <h4>No Challenges Available</h4>
+                        <p class="text-muted">Check back soon for new ${tabId} challenges!</p>
+                    </div>
+                `);
+            }
+        });
+    }
+
+    // Initialize the page
+    filterChallenges();
+    populateCategoryTabs();
 });
 </script>
+
+<!-- Add loading indicator and pagination -->
+<div class="page-load-status" style="display: none;">
+    <div class="loader-ellipsis">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</div>
+
+<style>
+/* Loading animation */
+.loader-ellipsis {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.loader-ellipsis div {
+    width: 12px;
+    height: 12px;
+    margin: 0 5px;
+    background-color: #4e73df;
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loader-ellipsis div:nth-child(1) { animation-delay: -0.32s; }
+.loader-ellipsis div:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { 
+        transform: scale(0);
+        opacity: 0.2;
+    }
+    40% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+</style>
 {% endblock %}

@@ -1,0 +1,32 @@
+{% macro render_field(field, kwargs=None) %}
+<div class="mb-3">
+  {% if field.label.text %}
+  <label for="{{ field.id }}" class="form-label">{{ field.label.text }}</label>
+  {% endif %}
+
+  {# Render the field: allow passing class via kwargs, but ensure bootstrap form-control #}
+  {% set _class_param = '' %}
+  {% if kwargs and kwargs.get('class') %}
+    {% set _class_param = kwargs.get('class') %}
+  {% endif %}
+  {% set classes = (_class_param ~ ' ').strip() %}
+  {% if 'form-control' not in classes %}
+    {% set classes = (classes + ' form-control').strip() %}
+  {% endif %}
+
+  {# Jinja does not support Python-style **kwargs expansion in templates; render with only the class attribute here. #}
+  {{ field(class=classes) }}
+
+  {% if field.errors %}
+  <div class="invalid-feedback d-block">
+    {% for error in field.errors %}
+      {{ error }}{% if not loop.last %}<br>{% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if field.description %}
+  <div class="form-text">{{ field.description }}</div>
+  {% endif %}
+</div>
+{% endmacro %}

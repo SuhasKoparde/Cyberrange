@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from 'bootstrap5/form.html' import render_field %}
 
-{% block title %}{{ challenge.name }} - Cyber Range{% endblock %}
+{% block title %}{{ challenge.name|e }} - Cyber Range{% endblock %}
 
 {% block head %}
 {{ super() }}
@@ -48,116 +48,106 @@
     
     .challenge-content code {
         font-family: 'Fira Code', monospace;
-        font-size: 0.9em;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 0.2em 0.4em;
-        border-radius: 3px;
     }
     
-    .step-badge {
-        background: #e94560;
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-weight: 600;
-        margin-right: 0.75rem;
-    }
-    
-    .real-world-card {
-        background: rgba(255, 255, 255, 0.05);
-        border-left: 4px solid #0f3460;
-    }
-    
-    .how-to-card {
-        background: rgba(233, 69, 96, 0.05);
-        border-left: 4px solid #e94560;
-    }
-</style>
-<style>
-    .challenge-content {
-        line-height: 1.8;
-    }
-    .challenge-content h2, 
-    .challenge-content h3, 
-    .challenge-content h4 {
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
-        color: #2c3e50;
-    }
-    .challenge-content pre {
-        border-radius: 6px;
-        margin: 1.5rem 0;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .challenge-content code {
-        font-family: 'Fira Code', monospace;
-        font-size: 0.9em;
-    }
-    .challenge-content table {
-        width: 100%;
-        margin: 1.5rem 0;
-        border-collapse: collapse;
-    }
-    .challenge-content table {
-        width: 100%;
-        margin: 1.5rem 0;
-        border-collapse: collapse;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .challenge-content th, 
-    .challenge-content td {
-        padding: 0.75rem 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .challenge-content thead th {
-        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-        color: white;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-    }
-    
-    .challenge-content tbody tr:nth-child(odd) {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .challenge-content tbody tr:nth-child(even) {
-        background-color: rgba(0, 0, 0, 0.2);
-    }
-    
-    .challenge-content tbody tr:hover {
-        background-color: rgba(52, 152, 219, 0.25);
-        transition: all 0.2s ease;
-    }
-    
-    /* Improved text contrast */
-    .challenge-content td {
-        color: #f0f0f0;
-    }
-    
-    .challenge-content th {
-        color: #ffffff;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-    }
-    
-    /* Make code blocks more visible */
-    .challenge-content code {
-        background-color: rgba(0, 0, 0, 0.3);
-        color: #f8f9fa;
-        padding: 0.2em 0.4em;
-        border-radius: 3px;
-        font-family: 'Fira Code', monospace;
-    }
     .challenge-content blockquote {
         border-left: 4px solid #6c757d;
         padding-left: 1rem;
         margin: 1.5rem 0;
         color: #6c757d;
+    }
+    
+    /* Enhanced markdown rendering styles */
+    .challenge-content p {
+        margin-bottom: 1rem;
+    }
+    
+    .challenge-content ol, 
+    .challenge-content ul {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+    }
+    
+    .challenge-content li {
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+    }
+    
+    .challenge-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1.5rem 0;
+        border: 1px solid #495057;
+    }
+    
+    .challenge-content table th {
+        background-color: #2d3748;
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: bold;
+        border: 1px solid #495057;
+        color: #e94560;
+    }
+    
+    .challenge-content table td {
+        padding: 0.75rem;
+        border: 1px solid #495057;
+    }
+    
+    .challenge-content table tr:nth-child(even) {
+        background-color: #1e1e2e;
+    }
+    
+    .challenge-content strong {
+        color: #e94560;
+        font-weight: bold;
+    }
+    
+    .challenge-content em {
+        color: #b0b0b0;
+        font-style: italic;
+    }
+    
+    /* Code block styling */
+    .challenge-content pre code {
+        padding: 1rem !important;
+        display: block;
+        overflow-x: auto;
+        border-radius: 6px;
+    }
+    
+    .hljs {
+        background: #1e1e2e !important;
+        padding: 1rem !important;
+        border-radius: 6px;
+    }
+    
+    /* Copy button for code blocks */
+    .code-block-wrapper {
+        position: relative;
+        margin: 1.5rem 0;
+    }
+    
+    .copy-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        background: rgba(233, 69, 96, 0.8);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        z-index: 10;
+    }
+    
+    .copy-btn:hover {
+        background: #e94560;
+    }
+    
+    .copy-btn.copied {
+        background: #28a745;
     }
 </style>
 {% endblock %}
@@ -170,7 +160,7 @@
                 <div class="card-header bg-dark">
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="mb-0 text-light">
-                            <i class="fas fa-flag me-2"></i>{{ challenge.name }}
+                            <i class="fas fa-flag me-2"></i>{{ challenge.name|e }}
                         </h3>
                         <div>
                             {% if progress and progress.completed %}
@@ -188,18 +178,18 @@
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         <span class="badge bg-secondary">
-                            <i class="fas fa-tag me-1"></i> {{ challenge.category }}
+                            <i class="fas fa-tag me-1"></i> {{ challenge.category|e }}
                         </span>
                         <span class="badge bg-{{ 'success' if challenge.difficulty == 'Easy' else 'warning' if challenge.difficulty == 'Medium' else 'danger' }}">
                             <i class="fas fa-{{ 'check-circle' if challenge.difficulty == 'Easy' else 'exclamation-circle' if challenge.difficulty == 'Medium' else 'exclamation-triangle' }} me-1"></i>
-                            {{ challenge.difficulty }}
+                            {{ challenge.difficulty|e }}
                         </span>
                         <span class="badge bg-primary">
-                            <i class="fas fa-star me-1"></i> {{ challenge.points }} XP
+                            <i class="fas fa-star me-1"></i> {{ challenge.points|e }} XP
                         </span>
                         {% if challenge.target_ip %}
                         <span class="badge bg-info">
-                            <i class="fas fa-server me-1"></i> {{ challenge.target_ip }}
+                            <i class="fas fa-server me-1"></i> {{ challenge.target_ip|e }}
                         </span>
                         {% endif %}
                     </div>
@@ -210,7 +200,7 @@
                                 <i class="fas fa-info-circle me-2"></i> Challenge Description
                             </h4>
                             <div class="p-3 mb-4 bg-dark rounded-3">
-                                {{ challenge.description|safe }}
+                                {{ challenge.description|render_markdown|safe }}
                             </div>
                         </div>
 
@@ -220,7 +210,7 @@
                                 <i class="fas fa-terminal me-2"></i> How to Execute
                             </h4>
                             <div class="mt-2">
-                                {{ challenge.how_to_execute|replace('\n', '<br>')|safe }}
+                                {{ challenge.how_to_execute|render_markdown|safe }}
                             </div>
                         </div>
                         {% endif %}
@@ -231,7 +221,7 @@
                                 <i class="fas fa-globe-americas me-2"></i> Real World Application
                             </h4>
                             <div class="mt-2">
-                                {{ challenge.real_world_use|replace('\n', '<br>')|safe }}
+                                {{ challenge.real_world_use|render_markdown|safe }}
                             </div>
                         </div>
                         {% endif %}
@@ -242,288 +232,170 @@
                                 <i class="fas fa-lightbulb me-2"></i> Hints
                             </h4>
                             <div class="mt-2 text-muted">
-                                {{ challenge.hints|replace('\n', '<br>')|safe }}
+                                {{ challenge.hints|render_markdown|safe }}
                             </div>
                         </div>
-                        {% endif %}
-
-                        {% if challenge_content %}
-                        <div class="challenge-section">
-                            <h4 class="d-flex align-items-center text-primary mb-3">
-                                <i class="fas fa-book me-2"></i> Challenge Content
-                            </h4>
-                            <div class="p-3 bg-dark rounded-3">
-                                {{ challenge_content|safe }}
-                            </div>
-                        </div>
-                        {% endif %}
-                            {{ challenge.description|markdown|safe }}
-                        </div>
-                        
-                        {% if challenge.how_to_execute %}
-                            <div class="card how-to-card border-0 mb-4">
-                                <div class="card-header bg-transparent border-0">
-                                    <h4 class="mb-0 text-light">
-                                        <i class="fas fa-terminal me-2 text-danger"></i>How to Execute
-                                    </h4>
-                                </div>
-                                <div class="card-body">
-                                    <div class="how-to-execute">
-                                        {% for line in challenge.how_to_execute.split('\n') %}
-                                            {% if line.strip() %}
-                                                <div class="d-flex align-items-start mb-3">
-                                                    <span class="step-badge">Step {{ loop.index }}</span>
-                                                    <div class="flex-grow-1 ms-2">
-                                                        {{ line|markdown|safe }}
-                                                    </div>
-                                                </div>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                        
-                        {% if challenge.real_world_use %}
-                            <div class="card real-world-card border-0 mb-4">
-                                <div class="card-header bg-transparent border-0">
-                                    <h4 class="mb-0 text-light">
-                                        <i class="fas fa-globe-americas me-2 text-primary"></i>Real World Application
-                                    </h4>
-                                </div>
-                                <div class="card-body">
-                                    <div class="real-world-use">
-                                        {{ challenge.real_world_use|markdown|safe }}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                        
-                        {% if challenge.hints %}
-                            <div class="alert alert-info mt-4">
-                                <h6><i class="fas fa-lightbulb me-2"></i>Hint</h6>
-                                <p class="mb-0">{{ challenge.hints }}</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endif %}
-                
-                {% if challenge.target_ip %}
-                <div class="alert alert-info">
-                    <i class="fas fa-bullseye"></i> 
-                    <strong>Target IP:</strong> {{ challenge.target_ip }}
-                </div>
-                {% endif %}
-                
-                {% if challenge.hints %}
-                <div class="mb-4">
-                    <button class="btn btn-outline-warning btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#hints">
-                        <i class="fas fa-lightbulb"></i> Show Hints
-                    </button>
-                    <div class="collapse mt-3" id="hints">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-lightbulb"></i> 
-                            <strong>Hint:</strong> {{ challenge.hints }}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="fas fa-key"></i> Submit Flag
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        {% if progress and progress.completed %}
-                            <div class="alert alert-success">
-                                <i class="fas fa-trophy"></i> 
-                                Challenge completed! You earned {{ challenge.points }} points.
-                            </div>
-                        {% else %}
-                            <form id="flagForm">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="flagInput" 
-                                           placeholder="Enter flag here..." required>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane"></i> Submit
-                                    </button>
-                                </div>
-                                <input type="hidden" id="challengeId" value="{{ challenge.id }}">
-                            </form>
-                            <div id="flagResult" class="mt-3"></div>
                         {% endif %}
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4">
-        <div class="sticky-top" style="top: 20px;">
-            <div class="card mb-4">
+                
+            <div class="card mt-4">
                 <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-list-ul me-2"></i>Table of Contents</h6>
+                    <h6 class="mb-0">
+                        <i class="fas fa-key"></i> Submit Flag
+                    </h6>
                 </div>
-                <div class="card-body py-2" id="toc">
-                    <!-- Table of contents will be generated by JavaScript -->
+                <div class="card-body">
+                    {% if progress and progress.completed %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-trophy"></i> 
+                            Challenge completed! You earned {{ challenge.points }} points.
+                        </div>
+                    {% else %}
+                        <form id="flagForm">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="flagInput" 
+                                       placeholder="Enter flag here..." required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Submit
+                                </button>
+                            </div>
+                            <input type="hidden" id="challengeId" value="{{ challenge.id }}">
+                        </form>
+                        <div id="flagResult" class="mt-3"></div>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-info-circle"></i> Challenge Info
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <strong>Category:</strong><br>
-                    <span class="text-muted">{{ challenge.category }}</span>
-                </div>
-                
-                <div class="mb-3">
-                    <strong>Difficulty:</strong><br>
-                    <span class="difficulty-{{ challenge.difficulty.lower() }}">
-                        {{ challenge.difficulty }}
-                    </span>
-                </div>
-                
-                <div class="mb-3">
-                    <strong>Points:</strong><br>
-                    <span class="text-muted">{{ challenge.points }}</span>
-                </div>
-                
-                {% if challenge.vm_name %}
-                <div class="mb-3">
-                    <strong>VM:</strong><br>
-                    <span class="text-muted">{{ challenge.vm_name }}</span>
-                </div>
-                {% endif %}
-                
-                {% if progress %}
-                <div class="mb-3">
-                    <strong>Attempts:</strong><br>
-                    <span class="text-muted">{{ progress.attempts }}</span>
-                </div>
-                
-                {% if progress.completed %}
-                <div class="mb-3">
-                    <strong>Completed:</strong><br>
-                    <span class="text-muted">{{ progress.completed_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                </div>
-                {% endif %}
-                {% endif %}
             </div>
         </div>
         
-        <div class="card mt-4">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-tools"></i> Tools & Resources
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <button class="btn btn-outline-info btn-sm" onclick="openTerminal()">
-                        <i class="fas fa-terminal"></i> Web Terminal
-                    </button>
-                    <button class="btn btn-outline-success btn-sm" onclick="openNmap()">
-                        <i class="fas fa-search"></i> Nmap Scanner
-                    </button>
-                    <button class="btn btn-outline-warning btn-sm" onclick="openBurp()">
-                        <i class="fas fa-bug"></i> Burp Suite
-                    </button>
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 20px;">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-list-ul me-2"></i>Table of Contents</h6>
+                    </div>
+                    <div class="card-body py-2" id="toc">
+                        <!-- Table of contents will be generated by JavaScript -->
+                    </div>
                 </div>
-                
-                <hr>
-                
-                <h6>Common Commands:</h6>
-                <div class="small">
-                    <code>nmap -sV {{ challenge.target_ip or 'TARGET_IP' }}</code><br>
-                    <code>nikto -h {{ challenge.target_ip or 'TARGET_IP' }}</code><br>
-                    <code>dirb http://{{ challenge.target_ip or 'TARGET_IP' }}/</code>
-                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle"></i> Challenge Info
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Category:</strong><br>
+                            <span class="text-muted">{{ challenge.category|e }}</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Difficulty:</strong><br>
+                            <span class="difficulty-{{ challenge.difficulty.lower() }}">
+                                {{ challenge.difficulty|e }}
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Points:</strong><br>
+                            <span class="text-muted">{{ challenge.points|e }}</span>
+                        </div>
+                        
+                        {% if challenge.vm_name %}
+                        <div class="mb-3">
+                            <strong>VM:</strong><br>
+                            <span class="text-muted">{{ challenge.vm_name|e }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if progress %}
+                        <div class="mb-3">
+                            <strong>Attempts:</strong><br>
+                            <span class="text-muted">{{ progress.attempts }}</span>
+                        </div>
+                        
+                        {% if progress.completed %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Completed on {{ progress.completed_at.strftime('%Y-%m-%d') }}
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
+{{ super() }}
 <script>
 // Generate table of contents
 function generateTOC() {
     const toc = document.getElementById('toc');
-    if (!toc) return;
+    const headings = document.querySelectorAll('.challenge-content h2, .challenge-content h3, .challenge-content h4');
     
-    const headers = document.querySelectorAll('.challenge-content h2, .challenge-content h3, .challenge-content h4');
-    
-    if (headers.length > 0) {
-        let tocHTML = '<h5 class="mb-3"><i class="fas fa-list-ul me-2"></i>Table of Contents</h5><ul class="nav flex-column">';
+    if (headings.length > 0) {
+        let html = '<div class="list-group list-group-flush">';
         
-        headers.forEach((header, index) => {
-            if (!header.id) {
-                header.id = `section-${index}`;
-            }
+        headings.forEach((heading, index) => {
+            const id = `section-${index}`;
+            heading.id = id;
             
-            const level = parseInt(header.tagName.substring(1));
-            const padding = (level - 2) * 15; // h2: 0px, h3: 15px, h4: 30px
+            const level = parseInt(heading.tagName.substring(1)) - 2; // h2 -> 0, h3 -> 1, etc.
+            const padding = level * 16;
             
-            tocHTML += `
-                <li class="nav-item">
-                    <a class="nav-link" href="#${header.id}" style="padding-left: ${padding}px">
-                        <i class="fas fa-chevron-right me-2 small"></i>${header.textContent}
-                    </a>
-                </li>`;
+            html += `
+                <a href="#${id}" class="list-group-item list-group-item-action border-0 py-2" 
+                     style="padding-left: ${padding}px; background: transparent; color: #f0f0f0;">
+                    <i class="fas fa-chevron-right me-2"></i>${heading.textContent}
+                </a>
+            `;
         });
         
-        tocHTML += '</ul>';
-        toc.innerHTML = tocHTML;
+        html += '</div>';
+        toc.innerHTML = html;
     } else {
-        toc.innerHTML = '<div class="alert alert-info">No sections found in this challenge.</div>';
+        toc.innerHTML = '<p class="text-muted mb-0">No sections available</p>';
     }
 }
 
-// Initialize copy functionality
-function initCopyButtons() {
-    // Copy flag to clipboard
-    const copyFlagBtn = document.getElementById('copyFlagBtn');
-    if (copyFlagBtn) {
-        copyFlagBtn.addEventListener('click', function() {
-            const flagInput = document.getElementById('flag');
-            if (flagInput) {
-                flagInput.select();
-                document.execCommand('copy');
-                
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                }, 2000);
-            }
-        });
-    }
+// Initialize copy buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate table of contents
+    generateTOC();
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
     
     // Add copy buttons to code blocks
     document.querySelectorAll('pre code').forEach((block) => {
         const pre = block.parentElement;
         const wrapper = document.createElement('div');
-        wrapper.className = 'code-block-wrapper position-relative';
+        wrapper.className = 'position-relative';
         
-        const copyButton = document.createElement('button');
-        copyButton.className = 'btn btn-sm btn-outline-secondary position-absolute';
-        copyButton.style.top = '5px';
-        copyButton.style.right = '5px';
-        copyButton.innerHTML = '<i class="far fa-copy"></i>';
-        copyButton.title = 'Copy to clipboard';
+        const button = document.createElement('button');
+        button.className = 'btn btn-sm btn-outline-secondary position-absolute';
+        button.style.top = '0.5rem';
+        button.style.right = '0.5rem';
+        button.setAttribute('data-bs-toggle', 'tooltip');
+        button.setAttribute('title', 'Copy to clipboard');
+        button.innerHTML = '<i class="fas fa-copy"></i>';
         
-        copyButton.addEventListener('click', () => {
+        const originalTitle = 'Copy to clipboard';
+        
+        button.addEventListener('click', () => {
             navigator.clipboard.writeText(block.textContent).then(() => {
-                const originalHTML = copyButton.innerHTML;
-                copyButton.innerHTML = '<i class="fas fa-check"></i>';
-                copyButton.classList.remove('btn-outline-secondary');
-                copyButton.classList.add('btn-success');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-success');
                 const tooltip = bootstrap.Tooltip.getInstance(button);
                 if (tooltip) {
                     tooltip.setContent({'.tooltip-inner': 'Copied!'});
@@ -531,7 +403,9 @@ function initCopyButtons() {
                 }
                 
                 setTimeout(() => {
-                    button.setAttribute('title', originalTitle);
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline-secondary');
                     if (tooltip) {
                         tooltip.setContent({'.tooltip-inner': originalTitle});
                     }
@@ -545,18 +419,9 @@ function initCopyButtons() {
         pre.insertBefore(button, block);
     });
 });
-</script>
 
-<div class="mt-4">
-    <a href="{{ url_for('challenges') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Back to Challenges
-    </a>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.getElementById('flagForm').addEventListener('submit', function(e) {
+// Flag submission
+document.getElementById('flagForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     
     const flag = document.getElementById('flagInput').value;

@@ -283,6 +283,51 @@ For support, please open an issue in the [GitHub repository](https://github.com/
 
 ## License
 MIT License - Educational Use
+ 
+## 🔰 Kali Linux Production Deployment
+
+This section shows commands and helper files included in the `deploy/` folder to run the application on a Kali Linux machine using a Python virtual environment and Gunicorn (recommended for Linux).
+
+Files added:
+- `deploy/kali_deploy.sh` — helper script that installs dependencies, creates a venv, installs Python packages, and launches Gunicorn on port 8000.
+- `deploy/cyberrange.service` — example `systemd` unit you can copy to `/etc/systemd/system/` and enable as a service.
+
+Quick steps (example):
+
+1. Clone the repo and cd into it:
+```bash
+git clone https://github.com/SuhasKoparde/Cyberrange.git
+cd Cyberrange
+```
+
+2. Make the deploy script executable and run it (review script before running):
+```bash
+chmod +x deploy/kali_deploy.sh
+sudo ./deploy/kali_deploy.sh
+```
+
+3. (Optional) To run as a systemd service copy the example unit and edit paths:
+```bash
+sudo cp deploy/cyberrange.service /etc/systemd/system/cyberrange.service
+# Edit: /etc/systemd/system/cyberrange.service and set WorkingDirectory and PATH to your user and venv
+sudo systemctl daemon-reload
+sudo systemctl enable cyberrange
+sudo systemctl start cyberrange
+sudo systemctl status cyberrange
+```
+
+4. Verify the app is reachable on port 8000:
+```bash
+curl -I http://127.0.0.1:8000
+# Expect HTTP/1.1 200 OK
+```
+
+Notes & tips:
+- The `kali_deploy.sh` script is a convenience helper — review it and edit variables (paths, python binary name) to match your environment before running.
+- On Kali you may want to run the app behind Nginx as a reverse proxy for TLS and better performance.
+- If you prefer a different port, update the Gunicorn bind argument in the script or the `systemd` unit.
+
+If you want, I can add a systemd unit templating script that populates the correct username and paths automatically and commit it to the repo.
 =======
 # Cyberrange
 CyberRange is a hands-on cybersecurity training platform offering virtual labs, CTFs, and real-world attack/defense simulations. It helps students and professionals build skills in pentesting, forensics, incident response, and network/cloud security with guided learning paths and performance tracking.

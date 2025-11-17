@@ -19,6 +19,29 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Custom Jinja2 filters
+def nl2br(text):
+    """Convert newlines to HTML line breaks"""
+    if text is None:
+        return ''
+    return text.replace('\n', '<br>')
+
+app.jinja_env.filters['nl2br'] = nl2br
+
+def render_markdown(text):
+    """Render Markdown text to HTML safely for templates."""
+    try:
+        import markdown as _md
+        if text is None:
+            return ''
+        # Use fenced_code and tables for richer formatting
+        return _md.markdown(text, extensions=['fenced_code', 'tables'])
+    except Exception:
+        # Fallback to nl2br if markdown fails
+        return nl2br(text)
+
+app.jinja_env.filters['render_markdown'] = render_markdown
+
 # Database Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,7 +90,10 @@ def load_user(user_id):
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    return render_template('index.html')
+    return render_template('index.html', 
+                         url_for=url_for,  # Pass url_for to template
+                         current_user=current_user  # Pass current_user to template
+                         )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -126,18 +152,38 @@ def dashboard():
     return render_template('dashboard.html', 
                          challenges=challenges, 
                          completed_challenges=completed_challenges,
-                         vm_status=vm_status)
+                         vm_status=vm_status,
+                         url_for=url_for,
+                         current_user=current_user)
 
 @app.route('/challenges')
 @login_required
 def challenges():
-    challenges = Challenge.query.all()
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 6  # Number of challenges per page
+    
+    # Get all challenges with pagination
+    challenges = Challenge.query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Get user progress for all challenges
     user_progress = UserProgress.query.filter_by(user_id=current_user.id).all()
     progress_dict = {p.challenge_id: p for p in user_progress}
     
+    # If it's an AJAX request, return JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'html': render_template('_challenges_list.html', 
+                                  challenges=challenges.items,
+                                  progress_dict=progress_dict),
+            'has_next': challenges.has_next,
+            'next_page': challenges.next_num if challenges.has_next else None
+        })
+    
     return render_template('challenges.html', 
-                         challenges=challenges, 
-                         progress_dict=progress_dict)
+                         challenges=challenges.items, 
+                         progress_dict=progress_dict,
+                         pagination=challenges)
 
 import os
 import markdown
