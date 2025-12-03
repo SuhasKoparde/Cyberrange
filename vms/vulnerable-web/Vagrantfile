@@ -1,4 +1,4 @@
-# Vulnerable Web Server VM Configuration
+choco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrantchoco install -y virtualbox vagrant# Vulnerable Web Server VM Configuration
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/focal64"
   config.vm.hostname = "vulnerable-web"
