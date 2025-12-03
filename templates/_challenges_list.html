@@ -18,10 +18,33 @@
                 <span class="badge bg-secondary">{{ challenge.category }}</span>
             </div>
             
-            {# Compact listing: remove description/how-to/real-world details from list view per UX request #}
-            <div class="mb-3">
-                <p class="card-text text-muted small mb-0">Quick overview available on the challenge page.</p>
+            {# New UX: show a short description and a 2-step preview for each challenge #}
+            {% if challenge.description %}
+            <p class="card-text text-muted small mb-2">{{ challenge.description[:140] }}{% if challenge.description|length > 140 %}...{% endif %}</p>
+            {% endif %}
+
+            {% set meta = challenge_meta.get(challenge.id) if challenge_meta is defined else None %}
+            {% if meta and meta.steps_preview %}
+            <div class="mb-2">
+                <small class="text-muted">Quick Steps:</small>
+                <ol class="small mb-0 ps-3">
+                    {% for step in meta.steps_preview %}
+                    <li>{{ step|e }}</li>
+                    {% endfor %}
+                </ol>
             </div>
+            {% endif %}
+            
+            {% if meta and meta.tools_list %}
+            <div class="mb-3">
+                {% for tool in meta.tools_list[:3] %}
+                    <span class="badge bg-primary text-light me-1 small"><i class="fas fa-wrench me-1"></i>{{ tool|e }}</span>
+                {% endfor %}
+                {% if meta.tools_list|length > 3 %}
+                    <span class="text-muted small">+{{ meta.tools_list|length - 3 }} more</span>
+                {% endif %}
+            </div>
+            {% endif %}
             
             {% if challenge.target_ip %}
             <div class="mb-3">

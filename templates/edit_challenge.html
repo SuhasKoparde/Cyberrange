@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Challenge Steps - {{ challenge.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h3>Edit Execution Steps</h3>
+  <div class="card bg-dark border-secondary">
+    <div class="card-body">
+      <h5>{{ challenge.name }}</h5>
+      <p class="text-muted">Edit the execution steps for this challenge. One step per line.</p>
+
+      <form method="post">
+        <div class="mb-3">
+          <label for="execution_steps_text" class="form-label">Execution Steps (newline separated)</label>
+          <textarea id="execution_steps_text" name="execution_steps_text" class="form-control bg-dark text-light" rows="10">{{ steps_text }}</textarea>
+        </div>
+        <button class="btn btn-primary">Save</button>
+        <a class="btn btn-secondary" href="{{ url_for('admin_challenges') }}">Back</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

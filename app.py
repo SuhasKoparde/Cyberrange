@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import ast
 import os
 import json
 import subprocess
@@ -56,6 +57,9 @@ class Challenge(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     how_to_execute = db.Column(db.Text, nullable=True)
+    # Store structured execution steps as a JSON encoded list (optional)
+    execution_steps = db.Column(db.Text, nullable=True)
+    commands = db.Column(db.Text, nullable=True)
     real_world_use = db.Column(db.Text, nullable=True)
     difficulty = db.Column(db.String(20), nullable=False)
     category = db.Column(db.String(50), nullable=False)
@@ -63,6 +67,7 @@ class Challenge(db.Model):
     vm_name = db.Column(db.String(100))
     target_ip = db.Column(db.String(15))
     flag = db.Column(db.String(100))
+    tools = db.Column(db.Text, nullable=True)
     hints = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -170,20 +175,69 @@ def challenges():
     user_progress = UserProgress.query.filter_by(user_id=current_user.id).all()
     progress_dict = {p.challenge_id: p for p in user_progress}
     
+    # Prepare lightweight metadata for each challenge to improve frontend UX (steps preview, parsed tools)
+    challenge_meta = {}
+    import ast
+    for c in challenges.items:
+        # steps preview
+        steps_preview = []
+        try:
+            if c.execution_steps:
+                # Try JSON first
+                try:
+                    steps = json.loads(c.execution_steps)
+                except Exception:
+                    # Fallback: maybe stored as Python-list literal
+                    try:
+                        parsed = ast.literal_eval(c.execution_steps)
+                        steps = list(parsed) if isinstance(parsed, (list, tuple)) else None
+                    except Exception:
+                        steps = None
+
+                if isinstance(steps, list):
+                    steps_preview = [s for s in steps[:2]]
+            elif c.how_to_execute:
+                steps_preview = [line.strip() for line in c.how_to_execute.split('\n') if line.strip()][:2]
+        except Exception:
+            steps_preview = []
+
+        # tools parsing (JSON or python-list string)
+        tools_list = None
+        try:
+            if c.tools:
+                try:
+                    tools_list = json.loads(c.tools)
+                except Exception:
+                    try:
+                        parsed = ast.literal_eval(c.tools)
+                        if isinstance(parsed, (list, tuple)):
+                            tools_list = list(parsed)
+                    except Exception:
+                        tools_list = None
+        except Exception:
+            tools_list = None
+
+        challenge_meta[c.id] = {
+            'steps_preview': steps_preview,
+            'tools_list': tools_list
+        }
+
     # If it's an AJAX request, return JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({
             'html': render_template('_challenges_list.html', 
                                   challenges=challenges.items,
-                                  progress_dict=progress_dict),
+                                  progress_dict=progress_dict,
+                                  challenge_meta=challenge_meta),
             'has_next': challenges.has_next,
             'next_page': challenges.next_num if challenges.has_next else None
         })
-    
+
     return render_template('challenges.html', 
                          challenges=challenges.items, 
                          progress_dict=progress_dict,
-                         pagination=challenges)
+                         pagination=challenges,
+                         challenge_meta=challenge_meta)
 
 import os
 import markdown
@@ -228,16 +282,59 @@ def challenge_detail(challenge_id):
     # DEBUG: Print what we have in challenge object
     print(f'DEBUG: Challenge ID={challenge.id}, name={challenge.name}')
     print(f'DEBUG: how_to_execute={bool(challenge.how_to_execute)}, length={len(challenge.how_to_execute) if challenge.how_to_execute else 0}')
+    print(f'DEBUG: execution_steps={bool(challenge.execution_steps)}')
     print(f'DEBUG: real_world_use={bool(challenge.real_world_use)}, length={len(challenge.real_world_use) if challenge.real_world_use else 0}')
     print(f'DEBUG: hints={bool(challenge.hints)}, length={len(challenge.hints) if challenge.hints else 0}')
     
+    # Parse structured execution steps if present, otherwise derive from how_to_execute
+    steps_list = None
+    try:
+        if challenge.execution_steps:
+            # Try JSON first
+            try:
+                steps_list = json.loads(challenge.execution_steps)
+            except Exception:
+                # Fallback: maybe a Python list literal string
+                try:
+                    parsed = ast.literal_eval(challenge.execution_steps)
+                    if isinstance(parsed, (list, tuple)):
+                        steps_list = list(parsed)
+                except Exception:
+                    steps_list = None
+
+        if not steps_list and challenge.how_to_execute:
+            steps_list = [line.strip() for line in challenge.how_to_execute.split('\n') if line.strip()]
+    except Exception as e:
+        print(f'Error parsing execution_steps: {e}')
+
+    # Parse tools into a list if possible (supports JSON or Python-list string)
+    tools_list = None
+    try:
+        if challenge.tools:
+            # Try JSON first
+            try:
+                tools_list = json.loads(challenge.tools)
+            except Exception:
+                # Fallback: parse Python list literal safely
+                try:
+                    parsed = ast.literal_eval(challenge.tools)
+                    if isinstance(parsed, (list, tuple)):
+                        tools_list = list(parsed)
+                except Exception:
+                    # Leave as None and let template handle string rendering
+                    tools_list = None
+    except Exception as e:
+        print(f'Error parsing tools: {e}')
+
     # Get challenge content from markdown file
     challenge_content = read_challenge_content(challenge.name)
-    
+
     return render_template('challenge_detail.html', 
                          challenge=challenge, 
                          progress=progress,
-                         challenge_content=challenge_content)
+                         challenge_content=challenge_content,
+                         steps_list=steps_list,
+                         tools_list=tools_list)
 
 @app.route('/submit_flag', methods=['POST'])
 @login_required
@@ -287,6 +384,53 @@ def admin():
     users = User.query.all()
     vms = VMStatus.query.all()
     return render_template('admin.html', users=users, vms=vms)
+
+
+@app.route('/admin/challenges')
+@login_required
+def admin_challenges():
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    challenges = Challenge.query.order_by(Challenge.id).all()
+    return render_template('admin_challenges.html', challenges=challenges)
+
+
+@app.route('/admin/challenges/<int:challenge_id>', methods=['GET', 'POST'])
+@login_required
+def edit_challenge(challenge_id):
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    challenge = Challenge.query.get_or_404(challenge_id)
+
+    if request.method == 'POST':
+        execution_steps_text = request.form.get('execution_steps_text', '')
+        # Convert textarea (newline separated) into JSON list
+        steps = [line.strip() for line in execution_steps_text.splitlines() if line.strip()]
+        try:
+            challenge.execution_steps = json.dumps(steps)
+            db.session.commit()
+            flash('Execution steps updated', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating execution steps: {e}', 'danger')
+
+        return redirect(url_for('admin_challenges'))
+
+    # GET: prepare textarea value
+    steps_text = ''
+    if challenge.execution_steps:
+        try:
+            steps_text = '\n'.join(json.loads(challenge.execution_steps))
+        except Exception:
+            steps_text = challenge.how_to_execute or ''
+    else:
+        steps_text = challenge.how_to_execute or ''
+
+    return render_template('edit_challenge.html', challenge=challenge, steps_text=steps_text)
 
 @app.route('/vm_control/<action>/<vm_name>')
 @login_required

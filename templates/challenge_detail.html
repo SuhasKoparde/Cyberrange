@@ -140,6 +140,19 @@
         margin-bottom: 0.5rem;
         padding: 1rem;
         border-radius: 4px;
+        color: #f0f0f0;
+    }
+
+    /* Ensure links and inline elements inside tools list are high-contrast */
+    .tools-list ul li a,
+    .tools-list ul li strong,
+    .tools-list ul li i {
+        color: #f0f0f0 !important;
+    }
+
+    .tools-list ul li a:hover {
+        color: #c7f0ff !important;
+        text-decoration: underline;
     }
 
     .accordion-item {
@@ -257,9 +270,32 @@
                             <h4 class="d-flex align-items-center text-primary mb-3">
                                 <i class="fas fa-terminal me-2"></i> Step-by-Step Execution Guide
                             </h4>
-                            <div class="mt-2 bg-dark p-3 rounded">
-                                {{ challenge.how_to_execute|render_markdown|safe }}
-                            </div>
+                                <div class="mt-2 bg-dark p-3 rounded">
+                                    {# Prefer structured steps passed from view as 'steps_list' (list). #}
+                                    {% if steps_list %}
+                                        <ol class="ps-3">
+                                            {% for step in steps_list %}
+                                                <li>{{ step | e }}</li>
+                                            {% endfor %}
+                                        </ol>
+                                    {% else %}
+                                        {# Fallback: split the free-text field if present #}
+                                        {% set raw_steps = (challenge.how_to_execute or '') | trim %}
+                                        {% if raw_steps %}
+                                            {% set lines = raw_steps | split('\n') %}
+                                            <ol class="ps-3">
+                                                {% for line in lines %}
+                                                    {% set text = line | trim %}
+                                                    {% if text %}
+                                                        <li>{{ text | e }}</li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </ol>
+                                        {% else %}
+                                            <p class="text-muted">No execution steps provided for this challenge.</p>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
                             <div class="mt-3 alert alert-info">
                                 <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Follow each step carefully. Copy commands using the copy button on the right.
                             </div>
@@ -284,23 +320,25 @@
                         {% endif %}
 
                         <!-- Key Commands Section -->
+                        {% if challenge.commands %}
                         <div class="challenge-section commands-card p-4 mb-4 rounded-3 border-start border-warning border-5">
                             <h4 class="d-flex align-items-center text-warning mb-3">
                                 <i class="fas fa-code me-2"></i> Key Commands Reference
                             </h4>
                             <p class="text-muted mb-3">Copy and paste these commands into your terminal as needed:</p>
                             <div class="bg-dark p-3 rounded">
-                                <pre><code class="language-bash">
-# Common commands for this challenge:
-# Follow the step-by-step guide above for proper usage
-
-# Example basic command:
-# command_name [options] [target]
-
-# Always refer to the detailed steps for context and proper parameters
-                                </code></pre>
+                                {% if challenge.commands %}
+                                    <pre><code class="language-bash">{{ challenge.commands | e }}</code></pre>
+                                {% else %}
+                                    <p class="text-muted mb-0">No command examples provided.</p>
+                                {% endif %}
                             </div>
                         </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Commands section is included in the step-by-step execution guide above.
+                        </div>
+                        {% endif %}
 
                         <!-- Tools Section -->
                         <div class="challenge-section tools-card p-4 mb-4 rounded-3 border-start border-info border-5">
@@ -313,16 +351,37 @@
                                     <i class="fas fa-info-circle"></i> <strong>Installation Guide:</strong><br>
                                     Most tools come pre-installed on Kali Linux. For Windows/Mac, check tool documentation.
                                 </div>
+                                {% if tools_list %}
+                                <ul class="list-group list-group-flush">
+                                    {% for tool in tools_list %}
+                                    <li class="list-group-item bg-light border-secondary">
+                                        <i class="fas fa-wrench text-info me-2"></i> <strong>{{ tool|e }}</strong>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% elif challenge.tools %}
+                                <ul class="list-group list-group-flush">
+                                    {% if challenge.tools is string %}
+                                        <!-- If tools is a string, render it as markdown -->
+                                        <li class="list-group-item bg-dark">
+                                            {{ challenge.tools|render_markdown|safe }}
+                                        </li>
+                                    {% else %}
+                                        <!-- If tools is a list, display each tool -->
+                                        {% for tool in challenge.tools %}
+                                        <li class="list-group-item bg-light border-secondary">
+                                            <i class="fas fa-wrench text-info me-2"></i> <strong>{{ tool|e }}</strong>
+                                        </li>
+                                        {% endfor %}
+                                    {% endif %}
+                                </ul>
+                                {% else %}
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item bg-dark">
-                                        <strong>Option 1: Pre-built Lists</strong><br>
-                                        Common tools include: Burp Suite, Metasploit, Wireshark, GDB, Hydra
-                                    </li>
-                                    <li class="list-group-item bg-dark">
-                                        <strong>Option 2: Installation (Linux)</strong><br>
-                                        <code class="bg-secondary p-2 rounded">sudo apt update && sudo apt install -y toolname</code>
+                                        <i class="fas fa-info-circle"></i> See the execution guide for recommended tools.
                                     </li>
                                 </ul>
+                                {% endif %}
                             </div>
                         </div>
 
