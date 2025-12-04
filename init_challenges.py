@@ -460,7 +460,7 @@ def init_challenges():
             'commands': (
                 "# Basic path traversal payloads\n"
                 "../../../etc/passwd\n"
-                "....//....//....//etc/shadow\n"
+                "....//....//....//etc/shadow (alternative encoding)\n"
                 "%2e%2e%2f%2e%2e%2fetc%2fpasswd  # URL encoded\n"
                 "/etc/hostname\n"
                 "/tmp/flag.txt\n"
