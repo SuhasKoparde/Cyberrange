@@ -1,21 +1,114 @@
 #!/usr/bin/env python3
 """
-Quick diagnostic to test if vulnerable.db exists and payloads work
-Run this on Kali to debug
+Advanced diagnostics to troubleshoot vulnerable_app.py
+Run this on Kali to identify startup issues
 """
-import sqlite3
 import os
+import subprocess
+import sys
+import time
 
-print("=" * 60)
-print("VULNERABLE APP DIAGNOSTICS")
-print("=" * 60)
+print("=" * 80)
+print("VULNERABLE APP DIAGNOSTICS - Checking Why App Won't Start")
+print("=" * 80)
 
-# Check if vulnerable.db exists
-if os.path.exists('vulnerable.db'):
-    print("\n✅ vulnerable.db EXISTS")
-else:
-    print("\n❌ vulnerable.db NOT FOUND - app needs to run once to create it")
-    exit(1)
+# 1. Check environment
+print("\n📍 STEP 1: Environment Check")
+print(f"   Current directory: {os.getcwd()}")
+print(f"   Python version: ", end="")
+result = subprocess.run(['python3', '--version'], capture_output=True, text=True)
+print(result.stdout.strip())
+
+# 2. Check vulnerable_app.py exists
+print("\n📍 STEP 2: File Check")
+if not os.path.exists('vulnerable_app.py'):
+    print("   ❌ vulnerable_app.py NOT FOUND!")
+    sys.exit(1)
+print("   ✅ vulnerable_app.py exists")
+
+# 3. Check dependencies
+print("\n📍 STEP 3: Dependency Check")
+deps_ok = True
+try:
+    import flask
+    print(f"   ✅ Flask {flask.__version__}")
+except ImportError as e:
+    print(f"   ❌ Flask missing: {e}")
+    deps_ok = False
+
+try:
+    import flask_sqlalchemy
+    print(f"   ✅ Flask-SQLAlchemy installed")
+except ImportError as e:
+    print(f"   ❌ Flask-SQLAlchemy missing: {e}")
+    deps_ok = False
+
+try:
+    import sqlite3
+    print(f"   ✅ sqlite3 available")
+except ImportError as e:
+    print(f"   ❌ sqlite3 missing: {e}")
+    deps_ok = False
+
+if not deps_ok:
+    print("\n⚠️  Installing missing dependencies...")
+    subprocess.run(['pip3', 'install', 'flask', 'flask-sqlalchemy'], check=False)
+    print("   Try running again.")
+    sys.exit(1)
+
+# 4. Try to start app and capture errors
+print("\n📍 STEP 4: Attempting App Startup")
+print("   Starting vulnerable_app.py (5 second wait)...")
+
+try:
+    proc = subprocess.Popen(
+        ['python3', 'vulnerable_app.py'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    time.sleep(5)
+    
+    # Check if process is still running
+    if proc.poll() is not None:
+        # Process exited
+        stdout, stderr = proc.communicate()
+        print(f"\n   ❌ App crashed during startup!")
+        if stderr:
+            print(f"\n   Error Output:\n{stderr}")
+        if stdout:
+            print(f"\n   Standard Output:\n{stdout}")
+        sys.exit(1)
+    
+    # Check if database was created
+    if os.path.exists('vulnerable.db'):
+        print("   ✅ vulnerable.db CREATED!")
+        try:
+            import sqlite3
+            conn = sqlite3.connect('vulnerable.db')
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM users;")
+            count = cursor.fetchone()[0]
+            conn.close()
+            print(f"   ✅ Database has {count} users")
+            print("\n✅ SUCCESS: App is working! Database initialized.")
+        except Exception as e:
+            print(f"   ⚠️  Database error: {e}")
+    else:
+        print("   ❌ Database NOT created (app may not be initializing properly)")
+    
+    # Kill process
+    proc.terminate()
+    try:
+        proc.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        
+except Exception as e:
+    print(f"   ❌ Exception: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 # Connect and test
 try:
