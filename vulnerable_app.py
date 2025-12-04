@@ -227,12 +227,12 @@ def login():
                 
                 flag_display = ''
                 if user['is_admin']:
-                    flag_display = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{sql_injection_bypass_123}</strong></p>'
+                    flag_display = '<p><strong style="color:red; font-size: 18px;">FLAG{sql_injection_bypass_123}</strong></p>'
                 
                 return f'''
                 <html>
                 <head><title>Login Successful</title></head>
-                <body>
+                <body style="font-family: Arial;">
                     <h1>Login Successful!</h1>
                     <p>Welcome, {user['username']}!</p>
                     <p>Your profile information:</p>
@@ -251,7 +251,7 @@ def login():
                 return '''
                 <html>
                 <head><title>Login Failed</title></head>
-                <body>
+                <body style="font-family: Arial;">
                     <h1>Login Failed</h1>
                     <p>Invalid credentials</p>
                     <a href="/login">Try Again</a> | <a href="/">Back</a>
@@ -262,7 +262,7 @@ def login():
             return f'''
             <html>
             <head><title>Error</title></head>
-            <body>
+            <body style="font-family: Arial;">
                 <h1>Database Error</h1>
                 <p>Error: {str(e)}</p>
                 <a href="/login">Back to Login</a>
@@ -303,17 +303,16 @@ def search():
         search_query = request.form.get('q', '')
     
     # VULNERABLE: Reflected XSS - User input is directly echoed without escaping
-    # Check if payload contains script/event tags (proof of XSS)
-    xss_detected = any(tag in search_query.lower() for tag in ['<script', 'onerror=', 'onload=', 'onclick=', '<svg'])
+    xss_detected = any(tag in search_query.lower() for tag in ['<script', 'onerror=', 'onload=', 'onclick=', '<svg', 'javascript:'])
     
     xss_flag_display = ''
     if xss_detected:
-        xss_flag_display = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{xss_reflected_456}</strong></p>'
+        xss_flag_display = '<p><strong style="color:red; font-size: 18px;">FLAG{xss_reflected_456}</strong></p>'
     
     return f'''
     <html>
     <head><title>Challenge 2: XSS</title></head>
-    <body>
+    <body style="font-family: Arial;">
         <h1>Challenge 2: Cross-Site Scripting (XSS)</h1>
         <p>Objective: Execute JavaScript code in the search functionality</p>
         <form method="GET">
@@ -322,7 +321,7 @@ def search():
         </form>
         <hr>
         <h2>Search Results:</h2>
-        <p>Results for: <strong>{search_query}</strong></p>
+        <p>Results for: {search_query}</p>
         <p>No matching users found.</p>
         {xss_flag_display}
         <hr>
@@ -355,15 +354,15 @@ def ping():
                 result = subprocess.getoutput(cmd)
                 
                 # Check if command injection was successful (extra commands executed)
-                if any(marker in result for marker in ['uid=', 'gid=', 'root', 'kali', 'groups=', 'drwx', 'total']):
-                    cmd_flag = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{command_injection_789}</strong></p>'
+                if any(marker in result for marker in ['uid=', 'gid=', 'root', 'kali', 'groups=', 'drwx', 'total', '-bash', '/bin']):
+                    cmd_flag = '<p><strong style="color:red; font-size: 18px;">FLAG{command_injection_789}</strong></p>'
         except Exception as e:
             result = f"Error: {str(e)}"
     
     return f'''
     <html>
     <head><title>Challenge 3: Command Injection</title></head>
-    <body>
+    <body style="font-family: Arial;">
         <h1>Challenge 3: Command Injection</h1>
         <p>Objective: Inject system commands through the ping utility</p>
         <form method="POST">
@@ -376,9 +375,9 @@ def ping():
         <hr>
         <p><strong>Hints:</strong></p>
         <ul>
-            <li>Try entering <code>localhost; whoami</code></li>
+            <li>Try entering <code>127.0.0.1; whoami</code></li>
             <li>Try <code>127.0.0.1 && id</code></li>
-            <li>Try <code>localhost | cat /etc/passwd</code></li>
+            <li>Try <code>127.0.0.1 | cat /etc/passwd</code></li>
         </ul>
         <a href="/">Back</a>
     </body>
@@ -396,23 +395,30 @@ def files():
     
     # VULNERABLE: Path Traversal
     try:
-        file_path = f"/tmp/challenges/{filename}"
-        # This is vulnerable - no path validation
+        # Try to read from /tmp/challenges first, then fallback to /etc for traversal attempts
+        if '../' in filename or filename.startswith('/'):
+            # Trying to traverse - allow it to show the vulnerability
+            file_path = filename
+            pt_flag = '<p><strong style="color:red; font-size: 18px;">FLAG{path_traversal_234}</strong></p>'
+        else:
+            file_path = f"/tmp/challenges/{filename}"
+        
         with open(file_path, 'r') as f:
             content = f.read()
-        
-        # Check if we successfully accessed a file outside /tmp/challenges
-        if '../' in filename or filename.startswith('/'):
-            pt_flag = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{path_traversal_234}</strong></p>'
     except FileNotFoundError:
-        error = f"File not found: {filename}"
+        if '../' in filename or filename.startswith('/'):
+            # Still show flag even if file doesn't exist - they crafted the right payload
+            pt_flag = '<p><strong style="color:red; font-size: 18px;">FLAG{path_traversal_234}</strong></p>'
+            error = f"File not found: {filename}"
+        else:
+            error = f"File not found: {filename}"
     except Exception as e:
         error = f"Error: {str(e)}"
     
     return f'''
     <html>
     <head><title>Challenge 4: Path Traversal</title></head>
-    <body>
+    <body style="font-family: Arial;">
         <h1>Challenge 4: Path Traversal</h1>
         <p>Objective: Access files outside the intended directory</p>
         <form method="GET">
@@ -430,7 +436,6 @@ def files():
             <li>Try <code>....//....//....//etc/shadow</code></li>
             <li>Try absolute paths like <code>/etc/hostname</code></li>
         </ul>
-        <p><strong>Setup:</strong> Create test files at /tmp/challenges/ first</p>
         <a href="/">Back</a>
     </body>
     </html>
@@ -438,14 +443,23 @@ def files():
 
 # ==================== CHALLENGE 5: AUTHENTICATION BYPASS ====================
 @app.route('/challenge/5')
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login', methods=['GET', 'POST'])
 def api_login():
-    data = request.get_json() or request.form
+    # Handle both JSON and form data
+    data = {}
+    
+    if request.method == 'POST':
+        if request.is_json:
+            data = request.get_json() or {}
+        else:
+            data = request.form
+    else:
+        data = request.args
+    
     username = data.get('username', '')
     password = data.get('password', '')
     
-    # VULNERABLE: Weak authentication with client-side bypass possibility
-    # Also vulnerable to SQL injection in the API (table name and DB path fixed)
+    # VULNERABLE: Weak authentication with SQL injection
     query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
     
     try:
@@ -477,7 +491,7 @@ def api_login():
     except Exception as e:
         return jsonify({
             'success': False,
-            'message': str(e)
+            'message': f'Database error: {str(e)}'
         }), 500
 
 @app.route('/auth-challenge')
@@ -485,9 +499,9 @@ def auth_challenge():
     return '''
     <html>
     <head><title>Challenge 5: Authentication Bypass</title></head>
-    <body>
-        <h1>Challenge 5: Authentication Bypass</h1>
-        <p>Objective: Bypass authentication using multiple techniques</p>
+    <body style="font-family: Arial;">
+        <h1>Challenge 5: Authentication Bypass (API)</h1>
+        <p>Objective: Bypass authentication using SQL injection</p>
         <form method="POST" action="/api/login">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
@@ -498,13 +512,8 @@ def auth_challenge():
         <ul>
             <li>SQL Injection in username: <code>' OR '1'='1</code></li>
             <li>SQL Injection with comment: <code>admin'--</code></li>
-            <li>Union-based injection: <code>' UNION SELECT * FROM vulnerable_user--</code></li>
+            <li>Test with curl: <code>curl -X POST http://localhost:8080/api/login -d "username=' OR '1'='1&password=test"</code></li>
         </ul>
-        <p><strong>Test with curl:</strong></p>
-        <pre>
-curl -X POST http://localhost:8080/api/login \\
-  -d "username=' OR '1'='1&password=test"
-        </pre>
         <a href="/">Back</a>
     </body>
     </html>
