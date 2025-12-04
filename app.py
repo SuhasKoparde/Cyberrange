@@ -66,6 +66,7 @@ class Challenge(db.Model):
     points = db.Column(db.Integer, default=100)
     vm_name = db.Column(db.String(100))
     target_ip = db.Column(db.String(15))
+    target_url = db.Column(db.String(255), nullable=True)
     flag = db.Column(db.String(100))
     tools = db.Column(db.Text, nullable=True)
     hints = db.Column(db.Text)
