@@ -61,42 +61,6 @@ CyberRange is a comprehensive cybersecurity training platform designed to provid
 
 ### Installation & Setup
 
-#### Step 1: Clone the Repository
-```bash
-git clone https://github.com/SuhasKoparde/Cyberrange.git
-cd Cyberrange
-```
-
-#### Step 2: Create and Activate Virtual Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\Activate.ps1
-```
-
-#### Step 3: Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-#### Step 4: Initialize Database
-```bash
-python3 init_challenges.py
-```
-
-This command populates the database with all challenges including SQL Injection, XSS, Command Injection, Path Traversal, and Authentication Bypass scenarios.
-
-#### Step 5: Start the Services
-
-**Terminal 1 - Main Platform** (port 5000):
-```bash
-python3 app.py
-```
-
-**Terminal 2 - Vulnerable Target App** (port 8080):
-```bash
-python3 vulnerable_app.py
-```
-
 ### Exact Commands (copy & paste)
 
 Below are exact sequences for a clean setup. Pick the block for your environment.
