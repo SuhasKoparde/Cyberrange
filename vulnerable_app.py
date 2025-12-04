@@ -73,6 +73,129 @@ def index():
             <li><a href="/challenge/4">Challenge 4: Path Traversal</a></li>
             <li><a href="/challenge/5">Challenge 5: Authentication Bypass</a></li>
         </ul>
+        <hr>
+        <p><a href="/debug">Debug/Status</a> | <a href="/test-payloads">Test All Payloads</a></p>
+    </body>
+    </html>
+    '''
+
+# ==================== DEBUG & DIAGNOSTIC ENDPOINTS ====================
+@app.route('/debug')
+def debug():
+    """Show database status and user information"""
+    try:
+        conn = sqlite3.connect('vulnerable.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Get users
+        cursor.execute("SELECT id, username, password, is_admin, email FROM users;")
+        users = cursor.fetchall()
+        conn.close()
+        
+        users_html = ''.join([f"<tr><td>{u['id']}</td><td>{u['username']}</td><td>{u['password']}</td><td>{'✓' if u['is_admin'] else '✗'}</td><td>{u['email']}</td></tr>" for u in users])
+        
+        return f'''
+        <html>
+        <head><title>Debug: Database Status</title></head>
+        <body>
+            <h1>Debug: Database Status</h1>
+            <h2>Users in vulnerable.db</h2>
+            <table border="1">
+                <tr><th>ID</th><th>Username</th><th>Password</th><th>Admin</th><th>Email</th></tr>
+                {users_html}
+            </table>
+            <hr>
+            <p><strong>Test Payloads:</strong></p>
+            <ul>
+                <li><a href="/test-payloads">Run all payload tests</a></li>
+                <li><a href="/">Back to Home</a></li>
+            </ul>
+        </body>
+        </html>
+        '''
+    except Exception as e:
+        return f"<h1>Debug Error</h1><p>{str(e)}</p>"
+
+@app.route('/test-payloads')
+def test_payloads():
+    """Test all challenge payloads and show results"""
+    results = []
+    
+    try:
+        conn = sqlite3.connect('vulnerable.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Test Challenge 1 & 5: SQLi payloads
+        payloads = [
+            ("' OR '1'='1' -- ", ""),
+            ("admin'--", "anything"),
+        ]
+        
+        for username, password in payloads:
+            query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
+            try:
+                cursor.execute(query)
+                user = cursor.fetchone()
+                if user:
+                    results.append({
+                        'challenge': 'SQL Injection',
+                        'payload': f"username: {username}",
+                        'status': '✅ PASSED',
+                        'result': f"Admin={user['is_admin']}, User={user['username']}",
+                        'flag': 'FLAG{sql_injection_bypass_123}' if user['is_admin'] else 'Not admin'
+                    })
+                else:
+                    results.append({
+                        'challenge': 'SQL Injection',
+                        'payload': f"username: {username}",
+                        'status': '❌ FAILED',
+                        'result': 'No user returned',
+                        'flag': 'N/A'
+                    })
+            except Exception as e:
+                results.append({
+                    'challenge': 'SQL Injection',
+                    'payload': f"username: {username}",
+                    'status': '❌ ERROR',
+                    'result': str(e),
+                    'flag': 'N/A'
+                })
+        
+        conn.close()
+    except Exception as e:
+        results.append({
+            'challenge': 'Database',
+            'payload': 'N/A',
+            'status': '❌ ERROR',
+            'result': str(e),
+            'flag': 'N/A'
+        })
+    
+    # Build HTML results
+    results_html = ''.join([
+        f"<tr><td>{r['challenge']}</td><td><code>{r['payload']}</code></td><td>{r['status']}</td><td>{r['result']}</td><td><strong>{r['flag']}</strong></td></tr>"
+        for r in results
+    ])
+    
+    return f'''
+    <html>
+    <head><title>Payload Test Results</title></head>
+    <body>
+        <h1>Payload Test Results</h1>
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <tr>
+                <th>Challenge</th>
+                <th>Payload</th>
+                <th>Status</th>
+                <th>Result</th>
+                <th>Flag</th>
+            </tr>
+            {results_html}
+        </table>
+        <hr>
+        <p><a href="/debug">Back to Debug</a> | <a href="/">Home</a></p>
     </body>
     </html>
     '''
@@ -101,6 +224,11 @@ def login():
                 session['user_id'] = user['id']
                 session['username'] = user['username']
                 session['is_admin'] = user['is_admin']
+                
+                flag_display = ''
+                if user['is_admin']:
+                    flag_display = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{sql_injection_bypass_123}</strong></p>'
+                
                 return f'''
                 <html>
                 <head><title>Login Successful</title></head>
@@ -112,9 +240,9 @@ def login():
                         <li>ID: {user['id']}</li>
                         <li>Username: {user['username']}</li>
                         <li>Email: {user['email']}</li>
-                        <li>Admin: {user['is_admin']}</li>
+                        <li>Admin: {"Yes ✓" if user['is_admin'] else "No"}</li>
                     </ul>
-                    {'<p><strong style="color:red;">🚩 FLAG: FLAG{{sql_injection_bypass_123}}</strong></p>' if user['is_admin'] else ''}
+                    {flag_display}
                     <a href="/logout">Logout</a> | <a href="/">Back</a>
                 </body>
                 </html>
@@ -175,6 +303,13 @@ def search():
         search_query = request.form.get('q', '')
     
     # VULNERABLE: Reflected XSS - User input is directly echoed without escaping
+    # Check if payload contains script/event tags (proof of XSS)
+    xss_detected = any(tag in search_query.lower() for tag in ['<script', 'onerror=', 'onload=', 'onclick=', '<svg'])
+    
+    xss_flag_display = ''
+    if xss_detected:
+        xss_flag_display = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{xss_reflected_456}</strong></p>'
+    
     return f'''
     <html>
     <head><title>Challenge 2: XSS</title></head>
@@ -189,6 +324,7 @@ def search():
         <h2>Search Results:</h2>
         <p>Results for: <strong>{search_query}</strong></p>
         <p>No matching users found.</p>
+        {xss_flag_display}
         <hr>
         <p><strong>Hints:</strong></p>
         <ul>
@@ -206,6 +342,7 @@ def search():
 @app.route('/ping', methods=['GET', 'POST'])
 def ping():
     result = ""
+    cmd_flag = ""
     if request.method == 'POST':
         host = request.form.get('host', '')
         
@@ -216,6 +353,10 @@ def ping():
                 # This is vulnerable to command injection
                 cmd = f"ping -c 4 {host}"
                 result = subprocess.getoutput(cmd)
+                
+                # Check if command injection was successful (extra commands executed)
+                if any(marker in result for marker in ['uid=', 'gid=', 'root', 'kali', 'groups=', 'drwx', 'total']):
+                    cmd_flag = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{command_injection_789}</strong></p>'
         except Exception as e:
             result = f"Error: {str(e)}"
     
@@ -231,6 +372,7 @@ def ping():
         </form>
         <hr>
         {'<h3>Ping Results:</h3><pre>' + result + '</pre>' if result else ''}
+        {cmd_flag}
         <hr>
         <p><strong>Hints:</strong></p>
         <ul>
@@ -250,6 +392,7 @@ def files():
     filename = request.args.get('file', 'readme.txt')
     content = ""
     error = ""
+    pt_flag = ""
     
     # VULNERABLE: Path Traversal
     try:
@@ -257,6 +400,10 @@ def files():
         # This is vulnerable - no path validation
         with open(file_path, 'r') as f:
             content = f.read()
+        
+        # Check if we successfully accessed a file outside /tmp/challenges
+        if '../' in filename or filename.startswith('/'):
+            pt_flag = '<p><strong style="color:red; font-size: 18px;">🚩 FLAG: FLAG{path_traversal_234}</strong></p>'
     except FileNotFoundError:
         error = f"File not found: {filename}"
     except Exception as e:
@@ -274,6 +421,7 @@ def files():
         </form>
         <hr>
         {'<h3>File Content:</h3><pre>' + content + '</pre>' if content else ''}
+        {pt_flag}
         {'<p style="color:red;">' + error + '</p>' if error else ''}
         <hr>
         <p><strong>Hints:</strong></p>
@@ -309,6 +457,7 @@ def api_login():
         conn.close()
         
         if user:
+            flag_value = 'FLAG{auth_bypass_success_789}' if user['is_admin'] else None
             return jsonify({
                 'success': True,
                 'message': 'Login successful',
@@ -317,7 +466,7 @@ def api_login():
                     'username': user['username'],
                     'email': user['email'],
                     'is_admin': user['is_admin'],
-                    'flag': 'FLAG{auth_bypass_success_789}' if user['is_admin'] else None
+                    'flag': flag_value
                 }
             })
         else:
