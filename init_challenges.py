@@ -98,7 +98,7 @@ def init_challenges():
             'points': 150,
             'vm_name': 'web-server-2',
             'target_ip': '192.168.1.11',
-            'flag': 'FLAG{xss_attack_success_456}',
+            'flag': 'FLAG{xss_reflected_456}',
             'target_url': 'http://10.0.2.7:8080/search',
             'hints': (
                 "1. Look for search fields, comment sections, or URL parameters that reflect input\n"
@@ -637,6 +637,146 @@ def init_challenges():
                 "3. The system might have NX enabled, requiring ROP or return-to-libc techniques\n"
                 "4. The flag is in a file called flag.txt in the home directory"
             )
+        },
+        {
+            'name': 'Command Injection',
+            'description': 'Inject system commands through user input to execute arbitrary code on the server.',
+            'how_to_execute': 'Follow the `execution_steps` to discover the injection point and execute commands.',
+            'execution_steps': [
+                'Identify input fields that might interact with system commands (ping, traceroute, DNS lookup, etc).',
+                'Test basic command injection using separators like ; && | or backticks.',
+                'If the application echoes command output, you can see the results directly on the page.',
+                'For blind command injection, use time-based techniques: sleep 5 in the payload and observe response time.',
+                'Once confirmed, enumerate the system: whoami, id, uname -a, cat /etc/passwd.',
+                'Locate and read the flag file or environment variable containing the flag.'
+            ],
+            'commands': (
+                "# Common command injection payloads:\n"
+                "127.0.0.1; whoami\n"
+                "127.0.0.1 && id\n"
+                "127.0.0.1 | cat /etc/passwd\n"
+                "127.0.0.1`whoami`\n"
+                "\n# Time-based detection (blind injection):\n"
+                "127.0.0.1 && sleep 5\n"
+            ),
+            'tools': [
+                'Browser with Developer Tools',
+                'Burp Suite Repeater',
+                'curl / wget'
+            ],
+            'real_world_use': (
+                "Command injection vulnerabilities have been used in major attacks like the 2017 Equifax breach "
+                "where Apache Struts remote code execution allowed attackers to execute arbitrary commands. "
+                "This led to the compromise of 147 million records containing SSNs and personal information. "
+                "Command injection is critical because it gives attackers direct system access."
+            ),
+            'difficulty': 'Medium',
+            'category': 'Web Security',
+            'points': 150,
+            'vm_name': 'web-server-3',
+            'target_ip': '192.168.1.12',
+            'flag': 'FLAG{command_injection_789}',
+            'target_url': 'http://10.0.2.7:8080/ping',
+            'hints': (
+                "1. Look for ping, DNS, or network-related functions\n"
+                "2. Try using pipe | to chain commands\n"
+                "3. The application executes your input through a shell\n"
+                "4. Output from your injected commands appears on the page"
+            )
+        },
+        {
+            'name': 'Path Traversal',
+            'description': 'Access files outside the intended directory by manipulating file paths with directory traversal sequences.',
+            'how_to_execute': 'Identify the file parameter and use traversal sequences to escape the intended directory.',
+            'execution_steps': [
+                'Locate file download or view endpoints (file=, download=, path= parameters).',
+                'Test with normal filenames to understand the expected structure.',
+                'Try directory traversal: ../../../etc/passwd to escape the restricted directory.',
+                'If ../ is filtered, try variations: ..%2F, ....// (double encoding), or URL encoding.',
+                'Attempt absolute paths if available: /etc/passwd or /etc/shadow.',
+                'Once successful, read sensitive files: /etc/passwd, /proc/self/environ (environment variables with flags).',
+                'Some configurations might show error messages revealing the file system structure.'
+            ],
+            'commands': (
+                "# Common path traversal payloads:\n"
+                "../../../etc/passwd\n"
+                "....//....//etc/shadow\n"
+                "/etc/hostname\n"
+                "/proc/self/environ\n"
+                "\n# URL encoded variants:\n"
+                "..%2F..%2F..%2Fetc%2Fpasswd\n"
+            ),
+            'tools': [
+                'Browser Developer Tools',
+                'curl / wget with -G for parameters',
+                'Burp Suite'
+            ],
+            'real_world_use': (
+                "Path traversal vulnerabilities have led to major data breaches. In 2013, Adobe suffered a breach "
+                "where attackers exploited path traversal to access source code and sensitive data of millions of users. "
+                "This vulnerability type is common in file upload/download features and can lead to unauthorized access "
+                "to configuration files, source code, or user data."
+            ),
+            'difficulty': 'Easy',
+            'category': 'Web Security',
+            'points': 100,
+            'vm_name': 'web-server-4',
+            'target_ip': '192.168.1.13',
+            'flag': 'FLAG{path_traversal_234}',
+            'target_url': 'http://10.0.2.7:8080/files',
+            'hints': (
+                "1. Look for file download/view functionality\n"
+                "2. Try entering ../ to go to parent directories\n"
+                "3. The application might allow reading any file on the system\n"
+                "4. Sensitive files include /etc/passwd, /etc/shadow, application config files"
+            )
+        },
+        {
+            'name': 'API Authentication Bypass',
+            'description': 'Bypass authentication in an API endpoint using SQL injection or other techniques.',
+            'how_to_execute': 'Identify the API endpoint and exploit the authentication logic to access admin features.',
+            'execution_steps': [
+                'Locate the API endpoint (usually /api/login, /api/authenticate, or similar).',
+                'Analyze the request: POST body, JSON format, expected parameters.',
+                'Test with valid credentials first to understand the response structure.',
+                'Attempt SQL injection in username/password fields: \' OR \'1\'=\'1 -- ',
+                'Try variations: admin\'-- (comment out password check), \' OR 1=1 -- etc.',
+                'Look for admin-specific responses: is_admin flag, special roles, or elevated privileges.',
+                'If successful, the response will contain a flag or grant access to admin functionality.'
+            ],
+            'commands': (
+                "# Test with curl (JSON payload):\n"
+                "curl -X POST http://localhost:8080/api/login \\\n"
+                "  -H 'Content-Type: application/json' \\\n"
+                "  -d '{\"username\": \"' OR '1'='1' -- \", \"password\": \"\"}'\n"
+                "\n# Form data variant:\n"
+                "curl -X POST http://localhost:8080/api/login \\\n"
+                "  -d 'username=' OR '1'='1&password=test'\n"
+            ),
+            'tools': [
+                'curl / Postman (API testing)',
+                'Burp Suite (interceptor & repeater)',
+                'Browser Developer Tools (Network tab)'
+            ],
+            'real_world_use': (
+                "API authentication bypass vulnerabilities have allowed attackers to access sensitive systems. "
+                "In 2017, the Healthcare.gov API had vulnerabilities allowing unauthorized access to citizen data. "
+                "APIs are common in modern applications and often have weaker security than web interfaces. "
+                "Bypassing API authentication can lead to full system compromise or data exfiltration."
+            ),
+            'difficulty': 'Medium',
+            'category': 'Web Security',
+            'points': 150,
+            'vm_name': 'api-server',
+            'target_ip': '192.168.1.14',
+            'flag': 'FLAG{auth_bypass_success_789}',
+            'target_url': 'http://10.0.2.7:8080/auth-challenge',
+            'hints': (
+                "1. The API expects JSON or form-encoded data\n"
+                "2. Try SQL injection payloads in the username field\n"
+                "3. Look for admin indicators in the response\n"
+                "4. The response contains a flag when admin privileges are obtained"
+            )
         }
     ]
 
@@ -662,7 +802,8 @@ def init_challenges():
             points=challenge_data['points'],
             vm_name=challenge_data['vm_name'],
             target_ip=challenge_data['target_ip'],
-            flag=challenge_data['flag'],
+                target_url=challenge_data.get('target_url'),
+                flag=challenge_data['flag'],
             tools=str(challenge_data.get('tools', [])),
             hints=challenge_data['hints'],
             created_at=datetime.now(timezone.utc)
