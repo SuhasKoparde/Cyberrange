@@ -435,7 +435,7 @@ def init_challenges():
             'points': 175,
             'vm_name': 'web-server-3',
             'target_ip': '192.168.1.30',
-            'flag': 'FLAG{command_injection_exec_222}',
+            'flag': 'FLAG{command_injection_789}',
             'target_url': 'http://10.0.2.7:8080/ping',
             'hints': (
                 "1. Try entering `; id` at the end of normal input\n"
@@ -485,7 +485,7 @@ def init_challenges():
             'points': 150,
             'vm_name': 'web-server-4',
             'target_ip': '192.168.1.40',
-            'flag': 'FLAG{path_traversal_accessed_333}',
+            'flag': 'FLAG{path_traversal_234}',
             'target_url': 'http://10.0.2.7:8080/files',
             'hints': (
                 "1. Try entering ../../../etc/passwd in the filename field\n"
@@ -535,7 +535,7 @@ def init_challenges():
             'points': 200,
             'vm_name': 'api-server',
             'target_ip': '192.168.1.50',
-            'flag': 'FLAG{auth_bypass_api_success_444}',
+            'flag': 'FLAG{auth_bypass_success_789}',
             'target_url': 'http://10.0.2.7:8080/auth-challenge',
             'hints': (
                 "1. The API endpoint is vulnerable to SQL injection in the authentication check\n"
