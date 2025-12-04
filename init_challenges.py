@@ -450,12 +450,12 @@ def init_challenges():
             'how_to_execute': 'Use directory traversal sequences to navigate the file system and read protected files.',
             'execution_steps': [
                 'Open the target application file viewer or download functionality.',
-                'Try accessing files outside the intended directory using `../` sequences.',
-                'Test payloads like `../../../etc/passwd` to escape the intended directory.',
+                'Try accessing files outside the intended directory using ../ sequences.',
+                'Test payloads like ../../../etc/passwd to escape the intended directory.',
                 'If successful, you can read sensitive files like configuration files, source code, or password files.',
-                'Use variations like `....//`, `..\`, or Unicode encoding if basic traversal is blocked.',
+                'Use variations like ../, backslash variations, or Unicode encoding if basic traversal is blocked.',
                 'Locate and read the flag file (might be in /tmp, /home, or application root).',
-                'Some systems might have the flag in predictable locations like `/flag`, `/var/www/flag`, etc.'
+                'Some systems might have the flag in predictable locations like /flag, /var/www/flag, etc.'
             ],
             'commands': (
                 "# Basic path traversal payloads\n"
@@ -488,9 +488,9 @@ def init_challenges():
             'flag': 'FLAG{path_traversal_accessed_333}',
             'target_url': 'http://10.0.2.7:8080/files',
             'hints': (
-                "1. Try entering `../../../etc/passwd` in the filename field\n"
-                "2. The application might strip `../` so try `....//` or double encoding\n"
-                "3. Test accessing `/etc/hostname` to confirm the vulnerability works\n"
+                "1. Try entering ../../../etc/passwd in the filename field\n"
+                "2. The application might strip ../ so try ....// or double encoding\n"
+                "3. Test accessing /etc/hostname to confirm the vulnerability works\n"
                 "4. The flag might be in /tmp or a custom directory"
             )
         },
