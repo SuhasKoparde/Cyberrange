@@ -85,11 +85,12 @@ def login():
         username = request.form.get('username', '')
         password = request.form.get('password', '')
         
-        # VULNERABLE: Direct SQL Injection
-        query = f"SELECT * FROM vulnerable_user WHERE username='{username}' AND password='{password}'"
+        # VULNERABLE: Direct SQL Injection (table name and DB path fixed)
+        query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
         
         try:
-            conn = sqlite3.connect('instance/vulnerable.db')
+            # Use the same SQLite file as SQLAlchemy (vulnerable.db)
+            conn = sqlite3.connect('vulnerable.db')
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             cursor.execute(query)
@@ -296,11 +297,11 @@ def api_login():
     password = data.get('password', '')
     
     # VULNERABLE: Weak authentication with client-side bypass possibility
-    # Also vulnerable to SQL injection in the API
-    query = f"SELECT * FROM vulnerable_user WHERE username='{username}' AND password='{password}'"
+    # Also vulnerable to SQL injection in the API (table name and DB path fixed)
+    query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
     
     try:
-        conn = sqlite3.connect('instance/vulnerable.db')
+        conn = sqlite3.connect('vulnerable.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         cursor.execute(query)
