@@ -97,6 +97,69 @@ python3 app.py
 python3 vulnerable_app.py
 ```
 
+### Exact Commands (copy & paste)
+
+Below are exact sequences for a clean setup. Pick the block for your environment.
+
+- Kali / Linux (bash)
+
+```bash
+# clone and enter repo
+git clone https://github.com/SuhasKoparde/Cyberrange.git
+cd Cyberrange
+
+# create and activate virtualenv
+python3 -m venv venv
+source venv/bin/activate
+
+# install dependencies
+pip install -r requirements.txt
+
+# initialize challenges (creates instance/cyber_range.db)
+python3 init_challenges.py
+
+# (optional) sync flags if you edited vulnerable app flags
+python3 update_flags.py
+
+# Terminal 1: start main platform (port 5000)
+python3 app.py
+
+# Terminal 2: start vulnerable target (port 8080)
+python3 vulnerable_app.py
+```
+
+- Windows (PowerShell)
+
+```powershell
+# clone and enter repo
+git clone https://github.com/SuhasKoparde/Cyberrange.git
+cd Cyberrange
+
+# create and activate virtualenv
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# install dependencies
+pip install -r requirements.txt
+
+# initialize challenges (creates instance\cyber_range.db)
+python init_challenges.py
+
+# (optional) sync flags if you edited vulnerable app flags
+python update_flags.py
+
+# Terminal 1: start main platform (PowerShell)
+python app.py
+
+# Terminal 2: start vulnerable target (PowerShell)
+python vulnerable_app.py
+```
+
+Notes:
+- If you change flags in `vulnerable_app.py`, run `python3 update_flags.py` (or `python update_flags.py` on Windows) to sync the platform DB without deleting progress.
+- To fully reset challenges and clear progress: delete `instance/cyber_range.db` and re-run `python3 init_challenges.py`.
+
+
 #### Step 6: Access the Platform
 
 Open your browser and navigate to:
