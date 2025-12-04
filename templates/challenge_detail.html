@@ -784,9 +784,16 @@ document.getElementById('flagForm')?.addEventListener('submit', function(e) {
         },
         body: `flag=${encodeURIComponent(flag)}&challenge_id=${challengeId}`
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(response => {
+        const ct = response.headers.get('Content-Type') || '';
+        if (ct.indexOf('application/json') !== -1) {
+            return response.json().then(data => ({status: response.status, data}));
+        }
+        // Non-JSON response (likely redirect to login) — read text and show helpful message
+        return response.text().then(text => ({status: response.status, data: {success: false, message: text}}));
+    })
+    .then(({status, data}) => {
+        if (data && data.success) {
             resultDiv.innerHTML = `
                 <div class="alert alert-success">
                     <i class="fas fa-check-circle"></i> ${data.message}
@@ -796,11 +803,21 @@ document.getElementById('flagForm')?.addEventListener('submit', function(e) {
                 location.reload();
             }, 2000);
         } else {
-            resultDiv.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-times-circle"></i> ${data.message}
-                </div>
-            `;
+            // If unauthenticated, suggest login
+            if (status === 401) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle"></i> Authentication required. Please log in and try again.
+                    </div>
+                `;
+            } else {
+                const msg = (data && data.message) ? data.message : 'Error submitting flag';
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> ${msg}
+                    </div>
+                `;
+            }
         }
     })
     .catch(error => {

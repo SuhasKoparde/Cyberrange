@@ -338,37 +338,43 @@ def challenge_detail(challenge_id):
                          tools_list=tools_list)
 
 @app.route('/submit_flag', methods=['POST'])
-@login_required
 def submit_flag():
-    challenge_id = request.form['challenge_id']
-    submitted_flag = request.form['flag']
-    
+    # Return JSON responses even when unauthenticated so the frontend can handle it
+    challenge_id = request.form.get('challenge_id')
+    submitted_flag = request.form.get('flag', '')
+
+    if not current_user.is_authenticated:
+        return jsonify({'success': False, 'message': 'Authentication required. Please log in.'}), 401
+
+    if not challenge_id:
+        return jsonify({'success': False, 'message': 'Bad request: missing challenge id'}), 400
+
     challenge = Challenge.query.get(challenge_id)
     if not challenge:
-        return jsonify({'success': False, 'message': 'Challenge not found'})
-    
+        return jsonify({'success': False, 'message': 'Challenge not found'}), 404
+
     progress = UserProgress.query.filter_by(
-        user_id=current_user.id, 
+        user_id=current_user.id,
         challenge_id=challenge_id
     ).first()
-    
+
     if not progress:
         progress = UserProgress(
             user_id=current_user.id,
             challenge_id=challenge_id
         )
         db.session.add(progress)
-    
-    progress.attempts += 1
-    
-    if submitted_flag.strip() == challenge.flag:
+
+    progress.attempts = (progress.attempts or 0) + 1
+
+    if submitted_flag.strip() == (challenge.flag or '').strip():
         progress.completed = True
         progress.completed_at = datetime.utcnow()
         db.session.commit()
         return jsonify({'success': True, 'message': 'Congratulations! Flag accepted!'})
     else:
         db.session.commit()
-        return jsonify({'success': False, 'message': 'Incorrect flag. Try again!'})
+        return jsonify({'success': False, 'message': 'Incorrect flag. Try again!'}), 200
 
 @app.route('/security-tools')
 @login_required
